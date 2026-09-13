@@ -25,3 +25,8 @@ class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
+
+
+# Harsh tank
+
+# troo tech

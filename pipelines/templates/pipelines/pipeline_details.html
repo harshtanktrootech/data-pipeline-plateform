@@ -1,0 +1,68 @@
+{% extends "pipelines/base.html" %}
+
+{% block title %}{{ pipeline.name }} | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+
+<a
+  href="{% url 'pipeline-list-page' %}"
+  class="btn btn-outline-secondary mb-4"
+>
+  ← Back to Pipelines
+</a>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white py-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">{{ pipeline.name }}</h2>
+
+      {% if pipeline.status == "active" %}
+        <span class="badge text-bg-success fs-6">Active</span>
+      {% else %}
+        <span class="badge text-bg-secondary fs-6">Inactive</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card-body">
+    <h5>Description</h5>
+
+    <p class="text-muted">
+      {{ pipeline.description|default:"No description added." }}
+    </p>
+
+    <hr>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <small class="text-muted d-block">Created By</small>
+        <strong>{{ pipeline.created_by.username }}</strong>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <small class="text-muted d-block">Created At</small>
+        <strong>{{ pipeline.created_at|date:"d M Y, h:i A" }}</strong>
+      </div>
+
+      <div class="col-md-6">
+        <small class="text-muted d-block">Last Updated</small>
+        <strong>{{ pipeline.updated_at|date:"d M Y, h:i A" }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer bg-white">
+    <a
+      href="/admin/pipelines/pipeline/{{ pipeline.id }}/change/"
+      class="btn btn-warning"
+    >
+      Edit Pipeline
+    </a>
+
+    <button class="btn btn-success" disabled>
+      Run Pipeline — Coming Soon
+    </button>
+  </div>
+</div>
+
+{% endblock %}

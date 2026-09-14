@@ -1,0 +1,79 @@
+{% extends "pipelines/base.html" %}
+
+{% block title %}Pipelines | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="mb-1">Pipelines</h1>
+    <p class="text-muted mb-0">
+      View and manage your data engineering pipelines.
+    </p>
+  </div>
+
+  <a href="/admin/pipelines/pipeline/add/" class="btn btn-primary">
+    + Create Pipeline
+  </a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th class="ps-4">Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Created By</th>
+            <th>Created At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for pipeline in pipelines %}
+          <tr>
+            <td class="ps-4 fw-semibold">{{ pipeline.name }}</td>
+
+            <td>
+              {{ pipeline.description|default:"No description" }}
+            </td>
+
+            <td>
+              {% if pipeline.status == "active" %}
+                <span class="badge text-bg-success">Active</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+
+            <td>{{ pipeline.created_by.username }}</td>
+
+            <td>{{ pipeline.created_at|date:"d M Y, h:i A" }}</td>
+
+            <td>
+              <a
+                href="{% url 'pipeline-detail-page' pipeline.id %}"
+                class="btn btn-sm btn-outline-primary"
+              >
+                View
+              </a>
+            </td>
+          </tr>
+
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              No pipelines created yet. Create one from the Admin panel.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

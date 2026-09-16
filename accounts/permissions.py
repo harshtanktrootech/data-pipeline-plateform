@@ -26,3 +26,14 @@ class IsViewer(BasePermission):
             request.user.is_authenticated
             and request.user.groups.filter(name="Viewer").exists()
         )
+
+
+class IsAdminOrOperator(BasePermission):
+
+    def has_permission(self, request, view):
+        return(
+            request.user.is_authenticated
+            and request.user.groups.filter(
+                name__in=["Admin", "Operator"]
+            ).exists()
+        )

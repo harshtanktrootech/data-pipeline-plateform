@@ -1,11 +1,12 @@
 from django.urls import path
 
 from pipelines.views import (
-    PipelineDetailView,
-    PipelineListView,
+    PipelineListCreateAPIView,
+    PipelineDetailAPIView,
 )
 
+
 urlpatterns = [
-    path("", PipelineListView.as_view(), name="pipeline-list-create"),
-    path("<int:pk>/", PipelineDetailView.as_view(), name="pipeline-detail"),
+    path("", PipelineListCreateAPIView.as_view(), name="pipeline-list-create"),
+    path("<int:pk>/", PipelineDetailAPIView.as_view(), name="pipeline-detail"),
 ]

@@ -1,56 +1,39 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
+from rest_framework.permissions import IsAuthenticated
+
+from accounts.permissions import IsAdminOrOperator
 
 from pipelines.models import Pipeline
 from pipelines.serializers import PipelineSerializer
 
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView
-)
-from rest_framework.permissions import IsAuthenticated
 
 
-
-# REST API VIEWS
-# URL: /api/pipelines/
-
-class PipelineListView(ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+class PipelineListCreateAPIView(ListCreateAPIView):
 
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
 
-    def get_queryset(self):
-        return self.queryset.filter(created_by=self.request.user)
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
 
+        return [IsAdminOrOperator()]
+    
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
 
-class PipelineDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    
+
+class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
 
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
 
-
-# HTML / BOOTSTRAP VIEWS
-# URL: /pipelines/
-
-@login_required
-def pipeline_list_page(request):
-    pipelines = Pipeline.objects.all().order_by("-created_at")
-
-    return render(
-        request, "pipelines/pipeline_list.html", {"pipelines": pipelines},
-    )
-
-
-@login_required
-def pipeline_detail_page(request, pk):
-    pipeline = get_object_or_404(Pipeline, pk=pk)
-
-    return render(
-        request,
-        "pipelines/pipeline_details.html",
-        {"pipeline": pipeline},
-    )
+        return [IsAdminOrOperator()]

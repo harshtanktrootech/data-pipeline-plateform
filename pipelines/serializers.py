@@ -23,3 +23,13 @@ class PipelineSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+    def validate_name(self, value):
+
+        if not value.strip():
+            raise serializers.ValidationError(
+                "Pipeline name cannot be empty."
+            )
+
+        return value

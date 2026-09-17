@@ -4,7 +4,7 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAuthenticated
 
-from accounts.permissions import IsAdminOrOperator
+from accounts.permissions import CanManagePipeline
 
 from pipelines.models import Pipeline
 from pipelines.serializers import PipelineSerializer
@@ -20,7 +20,7 @@ class PipelineListCreateAPIView(ListCreateAPIView):
         if self.request.method == "GET":
             return [IsAuthenticated()]
 
-        return [IsAdminOrOperator()]
+        return [CanManagePipeline()]
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -36,4 +36,4 @@ class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
         if self.request.method == "GET":
             return [IsAuthenticated()]
 
-        return [IsAdminOrOperator()]
+        return [CanManagePipeline()]

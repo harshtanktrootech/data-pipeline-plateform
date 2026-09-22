@@ -27,9 +27,16 @@ class PipelineSerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
 
-        if not value.strip():
+        value = value.strip()
+
+        if not value:
             raise serializers.ValidationError(
                 "Pipeline name cannot be empty."
+            )
+
+        if len(value) < 3:
+            raise serializers.ValidationError(
+                "Pipeline name must contain at least 3 characters."
             )
 
         return value

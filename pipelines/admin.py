@@ -12,3 +12,10 @@ class PipelineAdmin(admin.ModelAdmin):
         "created_by",
         "created_at",
     )
+
+
+
+# @admin.register(Customer)
+# class CustomerAdmin(admin.ModelAdmin):
+#     list_display = ("id", "name", "city", "created_at")
+#     search_fields = ("name", "city")

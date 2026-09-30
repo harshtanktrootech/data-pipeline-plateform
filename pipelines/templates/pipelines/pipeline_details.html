@@ -1,13 +1,10 @@
-{% comment %} {% extends "pipelines/base.html" %}
+{% extends "pipelines/base.html" %}
 
 {% block title %}{{ pipeline.name }} | Data Pipeline Platform{% endblock %}
 
 {% block content %}
 
-<a
-  href="{% url 'pipeline-list-page' %}"
-  class="btn btn-outline-secondary mb-4"
->
+<a href="{% url 'pipeline-list-page' %}" class="btn btn-outline-secondary mb-4">
   ← Back to Pipelines
 </a>
 
@@ -17,9 +14,9 @@
       <h2 class="mb-0">{{ pipeline.name }}</h2>
 
       {% if pipeline.status == "active" %}
-        <span class="badge text-bg-success fs-6">Active</span>
+      <span class="badge text-bg-success fs-6">Active</span>
       {% else %}
-        <span class="badge text-bg-secondary fs-6">Inactive</span>
+      <span class="badge text-bg-secondary fs-6">Inactive</span>
       {% endif %}
     </div>
   </div>
@@ -52,10 +49,7 @@
   </div>
 
   <div class="card-footer bg-white">
-    <a
-      href="/admin/pipelines/pipeline/{{ pipeline.id }}/change/"
-      class="btn btn-warning"
-    >
+    <a href="/admin/pipelines/pipeline/{{ pipeline.id }}/change/" class="btn btn-warning">
       Edit Pipeline
     </a>
 
@@ -65,4 +59,4 @@
   </div>
 </div>
 
-{% endblock %} {% endcomment %}
+{% endblock %}

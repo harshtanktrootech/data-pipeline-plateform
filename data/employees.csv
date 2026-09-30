@@ -1,0 +1,9 @@
+Name, Age, Department, Salary, Experience
+Rahul Sharma, 28, IT, 55000, 3
+Priya Patel, 32, HR, 60000, 6
+, 27, IT, 48000, 4
+Rohan Desai, NULL, HR, not_available, 3
+Karan Joshi, 35, Finance, 70000, garbage
+###INVALID###, abc, IT, 65000, 7
+, 29, NULL, 58000, 5
+Vikas Kumar, -5, Sales, 999999, ???

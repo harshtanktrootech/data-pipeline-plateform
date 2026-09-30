@@ -24,7 +24,14 @@ class Pipeline(models.Model):
         on_delete=models.CASCADE,
         related_name="pipelines",
     )
+    table_name = models.CharField(max_length=100, blank=True, default="")
+    source = models.CharField(max_length=200, blank=True, default="")
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.table_name:
+            self.table_name = self.name.lower().replace(" ", "_")
+        super().save(*args, **kwargs)

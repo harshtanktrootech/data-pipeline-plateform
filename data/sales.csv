@@ -1,0 +1,11 @@
+Product, Quantity, Region, Sales, Orders
+Laptop, 10, North, 50000, 25
+Mobile, 20, South, 40000, 30
+Tablet, 15, East, 30000, 20
+Headphones, 25, West, 15000, 35
+, 12, North, 24000, 18
+Keyboard, NULL, South, not_available, 22
+Mouse, 30, East, 12000, garbage
+###INVALID###, abc, West, 18000, 15
+Monitor, 20, NULL, 35000, 25
+Printer, -5, North, 999999, ???

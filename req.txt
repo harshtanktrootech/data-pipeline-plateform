@@ -1,0 +1,24 @@
+requermentiont:
+## Objectives
+* Build a simple ETL pipeline execution platform.
+* Enable scheduled and manual pipeline execution.
+* Provide real-time pipeline status and execution history.
+* Maintain audit logs for pipeline activities.
+* Implement Role-Based Access Control (RBAC).
+* Visualize pipeline health and execution metrics through dashboards.
+
+i understand the requirments by the sir. in our project we have save all audit logs, and maintain and store history and monitoring so whats the way for this ?
+
+
+-------------------
+
+
+
+no we cant want to delete duplicate data our goal is  save all audit logs, and maintain and store history and monitoring, so what we have options
+
+
+------------------
+
+
+opetion 1 is good for this project and start step 1 
+give all code in chat and explaination, and also give all reastion behind codes steps vise so i can understand and any new word/fuction can come than i can learn. and code manually after understad

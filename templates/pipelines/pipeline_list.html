@@ -14,10 +14,11 @@
 
   <!-- Admin only: Create Pipeline button -->
   {% if is_admin %}
-  <a href="/admin/pipelines/pipeline/add/" class="btn btn-primary shadow-sm">
+  <a href="{% url 'pipeline-create-page' %}" class="btn btn-primary shadow-sm">
     <i class="bi bi-plus-lg"></i> Create Pipeline
   </a>
   {% endif %}
+
 </div>
 
 <div class="card shadow-sm border-0">
@@ -73,6 +74,7 @@
                   </button>
                 </form>
                 {% endif %}
+
               </div>
             </td>
           </tr>

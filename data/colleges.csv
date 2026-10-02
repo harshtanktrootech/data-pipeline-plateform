@@ -1,0 +1,9 @@
+id, college_name, city, state, established_year, student_count
+1, Ahmedabad University, Ahmedabad, Gujarat, 2009, 5000
+2, Nirma University, Ahmedabad, Gujarat, NULL, 8500
+3, Gujarat University, NULL, Gujarat, 1949, 12000
+4, CEPT University, 12345, Gujarat, 1962, abc
+5, Delhi University, New Delhi, NULL, 1922, 25000
+6, @@@ College, Mumbai, Maharashtra, abcd, -500
+7, Christ University, Bengaluru, Karnataka, 2008, NULL
+8, Random College ###, XYZ, Unknown, 9999, 999999

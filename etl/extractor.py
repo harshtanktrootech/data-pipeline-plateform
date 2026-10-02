@@ -1,6 +1,3 @@
-# Responsible for: Getting data from the source.
-# Contains Python functions.
-
 import os
 import requests
 import pandas as pd

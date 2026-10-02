@@ -1,0 +1,69 @@
+{% extends "pipelines/base.html" %}
+
+{% block title %}Register | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-person-plus-fill text-primary fs-1"></i>
+                    <h2 class="h4 mt-2 mb-1">Create an Account</h2>
+                    <p class="text-muted small">Register to access the Data Pipeline Platform</p>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <!-- Username -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="Choose a username"
+                            required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Email Address</label>
+                        <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                    </div>
+
+                    <!-- Role Selection (RBAC) -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Account Role</label>
+                        <select name="role" class="form-select" required>
+                            <option value="Viewer" selected>Viewer (Read-only access)</option>
+                            <option value="Operator">Operator (Execute & monitor pipelines)</option>
+                            <option value="Admin">Admin (Full access to manage & execute)</option>
+                        </select>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter password"
+                            required>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control"
+                            placeholder="Re-enter password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-person-check-fill me-1"></i> Register
+                    </button>
+                </form>
+
+                <div class="text-center mt-3 text-muted small">
+                    Already have an account? <a href="{% url 'login-page' %}" class="text-decoration-none">Login
+                        here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

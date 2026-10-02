@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ pipeline.name }} | Details{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <a href="{% url 'pipeline-list-page' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Back to Pipelines
+  </a>
+
+  <!-- Action Buttons based on RBAC -->
+  <div class="d-flex gap-2">
+    {% if is_admin %}
+    <a href="/admin/pipelines/pipeline/{{ pipeline.id }}/change/" class="btn btn-outline-warning">
+      <i class="bi bi-pencil-square"></i> Edit
+    </a>
+    {% endif %}
+
+    {% if is_operator %}
+    <form action="{% url 'pipeline-run-page' pipeline.id %}" method="POST" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success shadow-sm">
+        <i class="bi bi-play-fill"></i> Run Pipeline Now
+      </button>
+    </form>
+    {% else %}
+    <button class="btn btn-secondary" disabled title="Viewer role cannot execute pipelines">
+      <i class="bi bi-lock-fill"></i> Read Only (Viewer)
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Pipeline Configuration Card -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+    <h2 class="h5 mb-0 fw-bold">{{ pipeline.name }}</h2>
+    {% if pipeline.status == "active" %}
+    <span class="badge bg-success">Active</span>
+    {% else %}
+    <span class="badge bg-secondary">Inactive</span>
+    {% endif %}
+  </div>
+
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <small class="text-muted d-block">Source Path</small>
+        <code>{{ pipeline.source|default:"Not specified" }}</code>
+      </div>
+
+      <div class="col-md-6">
+        <small class="text-muted d-block">Target Database Table</small>
+        <span class="badge bg-dark fs-6">{{ pipeline.table_name }}</span>
+      </div>
+
+      <div class="col-md-4">
+        <small class="text-muted d-block">Created By</small>
+        <strong>{{ pipeline.created_by.username }}</strong>
+      </div>
+
+      <div class="col-md-4">
+        <small class="text-muted d-block">Created At</small>
+        <strong>{{ pipeline.created_at|date:"d M Y, h:i A" }}</strong>
+      </div>
+
+      <div class="col-md-4">
+        <small class="text-muted d-block">Last Updated</small>
+        <strong>{{ pipeline.updated_at|date:"d M Y, h:i A" }}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dynamic Database Table Preview -->
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+    <div>
+      <h3 class="h6 mb-0 fw-bold">
+        <i class="bi bi-table text-primary me-2"></i> Database Table Preview (<code>{{ pipeline.table_name }}</code>)
+      </h3>
+      <small class="text-muted">Total records in database: <strong>{{ total_db_rows }}</strong></small>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    {% if preview_rows %}
+    <div class="table-responsive">
+      <table class="table table-sm table-striped table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            {% for header in preview_headers %}
+            <th class="ps-3">{{ header }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in preview_rows %}
+          <tr>
+            {% for cell in row %}
+            <td class="ps-3">{{ cell }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-database-slash fs-1 d-block mb-2"></i>
+      No data found in table <code>{{ pipeline.table_name }}</code>.
+      <div class="small mt-1">Click <strong>"Run Pipeline Now"</strong> above to extract, transform, and load data.
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

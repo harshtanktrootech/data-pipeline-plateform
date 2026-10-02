@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Pipelines | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Pipelines</h1>
+    <p class="text-muted mb-0">
+      View and execute your data engineering pipelines.
+    </p>
+  </div>
+
+  <!-- Admin only: Create Pipeline button -->
+  {% if is_admin %}
+  <a href="/admin/pipelines/pipeline/add/" class="btn btn-primary shadow-sm">
+    <i class="bi bi-plus-lg"></i> Create Pipeline
+  </a>
+  {% endif %}
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th class="ps-4">Pipeline Name</th>
+            <th>Source</th>
+            <th>Target Table</th>
+            <th>Status</th>
+            <th>Created By</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for pipeline in pipelines %}
+          <tr>
+            <td class="ps-4 fw-semibold text-primary">
+              <a href="{% url 'pipeline-detail-page' pipeline.id %}" class="text-decoration-none">
+                {{ pipeline.name }}
+              </a>
+            </td>
+
+            <td><code>{{ pipeline.source|default:"—" }}</code></td>
+            <td><code>{{ pipeline.table_name|default:"—" }}</code></td>
+
+            <td>
+              {% if pipeline.status == "active" %}
+              <span class="badge bg-success-subtle text-success border border-success">Active</span>
+              {% else %}
+              <span class="badge bg-secondary-subtle text-secondary border border-secondary">Inactive</span>
+              {% endif %}
+            </td>
+
+            <td>{{ pipeline.created_by.username }}</td>
+
+            <td class="text-end pe-4">
+              <div class="d-inline-flex gap-2">
+                <!-- View Details -->
+                <a href="{% url 'pipeline-detail-page' pipeline.id %}" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-eye"></i> View
+                </a>
+
+                <!-- Admin & Operator: Run Pipeline button -->
+                {% if is_operator %}
+                <form action="{% url 'pipeline-run-page' pipeline.id %}" method="POST" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-success">
+                    <i class="bi bi-play-fill"></i> Run
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+              No pipelines configured yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

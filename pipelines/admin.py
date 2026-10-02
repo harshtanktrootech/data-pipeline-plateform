@@ -10,6 +10,8 @@ class PipelineAdmin(admin.ModelAdmin):
         "name",
         "status",
         "created_by",
+        "table_name",
+        "source",
         "created_at",
     )
 

@@ -35,3 +35,6 @@ class Pipeline(models.Model):
         if not self.table_name:
             self.table_name = self.name.lower().replace(" ", "_")
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name

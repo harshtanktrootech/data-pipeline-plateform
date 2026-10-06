@@ -18,6 +18,7 @@ from pipelines.services import (
     toggle_pipeline_schedule,
     delete_pipeline_cron,
 )
+from audit.services import log_action
 
 
 # ── REST API Views ──
@@ -32,7 +33,14 @@ class PipelineListCreateAPIView(ListCreateAPIView):
         return [CanManagePipeline()]
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        pipeline = serializer.save(created_by=self.request.user)
+        log_action(
+            self.request.user,
+            "PIPELINE_CREATE",
+            f"Pipeline '{pipeline.name}' (#{pipeline.id})",
+            "Created via REST API",
+            self.request
+        )
 
 
 class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -125,6 +133,15 @@ def run_pipeline_page_view(request, pk):
         
         result = run_pipeline(pipeline, triggered_by=request.user)
         
+        # Log Audit event for Pipeline Execution
+        log_action(
+            request.user,
+            "PIPELINE_RUN",
+            f"Pipeline '{pipeline.name}' (#{pipeline.id})",
+            f"Status: {result['status']}, Loaded: {result.get('records_loaded', 0)} rows in {result.get('duration_seconds', 0)}s",
+            request
+        )
+
         if result["status"] == "SUCCESS":
             messages.success(
                 request,
@@ -160,6 +177,13 @@ def schedule_pipeline_view(request, pk):
 
             if frequency in cron_presets:
                 schedule_pipeline_cron(pipeline, **cron_presets[frequency])
+                log_action(
+                    request.user,
+                    "SCHEDULE_UPDATE",
+                    f"Pipeline '{pipeline.name}' (#{pipeline.id})",
+                    f"Cron frequency set to: '{frequency}'",
+                    request
+                )
                 messages.success(request, f"Cron schedule updated successfully for '{pipeline.name}'!")
             else:
                 messages.error(request, "Invalid schedule preset selected.")
@@ -170,10 +194,24 @@ def schedule_pipeline_view(request, pk):
                 new_state = not task.enabled
                 toggle_pipeline_schedule(pipeline.id, new_state)
                 status_text = "Enabled" if new_state else "Paused"
+                log_action(
+                    request.user,
+                    "SCHEDULE_TOGGLE",
+                    f"Pipeline '{pipeline.name}' (#{pipeline.id})",
+                    f"Schedule state changed to: {status_text}",
+                    request
+                )
                 messages.success(request, f"Schedule for '{pipeline.name}' is now {status_text}.")
 
         elif action == "delete":
             delete_pipeline_cron(pipeline.id)
+            log_action(
+                request.user,
+                "SCHEDULE_DELETE",
+                f"Pipeline '{pipeline.name}' (#{pipeline.id})",
+                "Removed cron schedule",
+                request
+            )
             messages.info(request, f"Schedule removed for '{pipeline.name}'.")
 
     return redirect("pipeline-detail-page", pk=pk)
@@ -198,6 +236,14 @@ def pipeline_create_page(request):
                 base_name = pipeline.name.lower().strip().replace(" ", "_").replace("-", "_")
                 pipeline.table_name = f"{base_name}_data"
             pipeline.save()
+
+            log_action(
+                request.user,
+                "PIPELINE_CREATE",
+                f"Pipeline '{pipeline.name}' (#{pipeline.pk})",
+                f"Source: {pipeline.source}, Table: {pipeline.table_name}",
+                request
+            )
 
             messages.success(request, f"Pipeline '{pipeline.name}' created successfully! You can now review and execute it.")
             return redirect("pipeline-detail-page", pk=pipeline.pk)

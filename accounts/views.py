@@ -5,6 +5,7 @@ from django.contrib import messages
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from accounts.permissions import IsAdmin, IsOperator, IsViewer
+from audit.services import log_action
 
 
 # ── HTML Authentication Views ──
@@ -61,6 +62,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
+            log_action(user, "USER_LOGIN", f"User '{user.username}'", "Logged in via web form", request)
             messages.success(request, f"Welcome back, {user.username}!")
             return redirect("pipeline-list-page")
         else:
@@ -70,12 +72,14 @@ def login_view(request):
 
 
 def logout_view(request):
+    if request.user.is_authenticated:
+        log_action(request.user, "USER_LOGOUT", f"User '{request.user.username}'", "Logged out from web interface", request)
     logout(request)
     messages.info(request, "You have been logged out.")
     return redirect("login-page")
 
 
-# ── DRF Test Views (Existing) ──
+# ── DRF Test Views ──
 
 class AdminTestAPIView(APIView):
     permission_classes = [IsAdmin]

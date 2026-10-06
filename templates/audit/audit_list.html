@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1"><i class="bi bi-shield-lock-fill text-primary me-2"></i>System Audit Logs</h1>
+        <p class="text-muted mb-0">
+            Security and administrative audit trail of all platform actions.
+        </p>
+    </div>
+    <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2">
+        <i class="bi bi-shield-fill-check me-1"></i> Admin Privilege Required
+    </span>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold text-dark">
+            <i class="bi bi-list-columns-reverse me-1 text-primary"></i> Activity Log History
+        </h6>
+        <span class="badge bg-light text-muted border">Latest 100 Events</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Resource</th>
+                    <th>IP Address</th>
+                    <th class="pe-4">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="ps-4 font-monospace small text-muted">
+                        {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                    </td>
+                    <td>
+                        {% if log.user %}
+                        <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>{{
+                            log.user.username }}</span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary border"><i
+                                class="bi bi-cpu me-1"></i>System</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-primary-subtle text-primary border border-primary">
+                            {{ log.get_action_display }}
+                        </span>
+                    </td>
+                    <td><code class="text-dark fw-semibold">{{ log.resource }}</code></td>
+                    <td><span class="font-monospace small text-secondary">{{ log.ip_address|default:"127.0.0.1"
+                            }}</span></td>
+                    <td class="pe-4 text-secondary small">{{ log.details|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-2 d-block text-secondary mb-1"></i>
+                        No audit events recorded yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

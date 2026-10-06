@@ -67,12 +67,100 @@
   </div>
 </div>
 
-<!-- Live DB Table Data Preview -->
+<!-- ⏰ Automated Cron Schedule Card -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
-  <div class="card-header bg-white py-3 px-4 border-bottom">
+  <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+    <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+      <i class="bi bi-clock-history text-primary"></i> Automated Cron Schedule
+    </h6>
+    {% if schedule_task %}
+    {% if schedule_task.enabled %}
+    <span class="badge bg-success px-3 py-1"><i class="bi bi-check-circle me-1"></i> Active</span>
+    {% else %}
+    <span class="badge bg-warning text-dark px-3 py-1"><i class="bi bi-pause-circle me-1"></i> Paused</span>
+    {% endif %}
+    {% else %}
+    <span class="badge bg-secondary px-3 py-1"><i class="bi bi-slash-circle me-1"></i> Manual Only</span>
+    {% endif %}
+  </div>
+
+  <div class="card-body p-4">
+    <div class="row align-items-center g-3">
+      <div class="col-md-6">
+        {% if schedule_task %}
+        <p class="mb-1 text-muted small text-uppercase fw-semibold">Current Schedule Rule:</p>
+        <p class="fs-6 fw-semibold font-monospace mb-1 text-dark">
+          <code>{{ schedule_task.crontab.minute }} {{ schedule_task.crontab.hour }} {{ schedule_task.crontab.day_of_month }} {{ schedule_task.crontab.month_of_year }} {{ schedule_task.crontab.day_of_week }}</code>
+        </p>
+        <span class="badge bg-light text-muted border">Total Runs: {{ schedule_task.total_run_count }}</span>
+        {% if schedule_task.last_run_at %}
+        <span class="badge bg-light text-muted border ms-1">
+          Last Run: {{ schedule_task.last_run_at|date:"Y-m-d H:i" }}
+        </span>
+        {% endif %}
+        {% else %}
+        <p class="text-muted mb-0">This pipeline is currently triggered manually. Choose a frequency below to schedule
+          automated background runs.</p>
+        {% endif %}
+      </div>
+
+      <!-- Schedule Setup & Controls -->
+      <div class="col-md-6">
+        <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST"
+          class="d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_schedule">
+          <select name="frequency" class="form-select w-auto" required>
+            <option value="" disabled {% if not schedule_task %}selected{% endif %}>-- Select Frequency --</option>
+            <option value="every_1_min">⚡ Every 1 Minute (Testing)</option>
+            <option value="every_5_mins">⏱️ Every 5 Minutes</option>
+            <option value="every_hour">🕐 Every Hour</option>
+            <option value="daily_midnight">🌙 Daily at Midnight (00:00)</option>
+            <option value="weekly_monday">📅 Weekly on Monday (09:00 AM)</option>
+          </select>
+          <button type="submit" class="btn btn-primary rounded-pill px-3">
+            <i class="bi bi-save me-1"></i> Save
+          </button>
+        </form>
+
+        {% if schedule_task %}
+        <div class="d-flex gap-2 justify-content-md-end mt-2">
+          <!-- Toggle Pause/Resume -->
+          <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle">
+            <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+              {% if schedule_task.enabled %}
+              <i class="bi bi-pause-fill me-1"></i> Pause
+              {% else %}
+              <i class="bi bi-play-fill me-1"></i> Resume
+              {% endif %}
+            </button>
+          </form>
+
+          <!-- Delete Schedule -->
+          <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+              onclick="return confirm('Remove scheduled execution for this pipeline?');">
+              <i class="bi bi-trash me-1"></i> Remove
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📊 Live DB Table Data Preview -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
     <h6 class="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
       <i class="bi bi-table text-primary"></i> Live Database Preview (Top 5 Records)
     </h6>
+    <span class="badge bg-light text-muted border">Table: {{ pipeline.table_name }}</span>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive">
@@ -97,7 +185,7 @@
           <tr>
             <td colspan="10" class="text-center text-muted py-4">
               <i class="bi bi-inbox fs-2 d-block text-secondary mb-1"></i>
-              No data loaded yet. Click <strong>"Run Pipeline Now"</strong> to execute ETL and populate data.
+              No data loaded yet. Run the pipeline to populate records.
             </td>
           </tr>
           {% endfor %}
@@ -107,75 +195,72 @@
   </div>
 </div>
 
-<!-- Execution History & Performance Monitoring Section -->
+<!-- 📜 Execution History Table -->
 <div class="card border-0 shadow-sm rounded-4">
   <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-    <h6 class="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
-      <i class="bi bi-clock-history text-primary"></i> Execution History & Monitoring
+    <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+      <i class="bi bi-clock-history text-primary"></i> Execution History (Last 10 Runs)
     </h6>
-    <span class="badge bg-light text-muted border">Latest 10 Runs</span>
+    <span class="badge bg-light text-muted border">Latest Runs</span>
   </div>
-
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th class="ps-4">Run Timestamp</th>
-            <th>Status</th>
-            <th>Extracted</th>
-            <th>Loaded</th>
-            <th>Duration</th>
-            <th>Triggered By</th>
-            <th class="pe-4">Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for run in executions %}
-          <tr>
-            <td class="ps-4 font-monospace small">
-              {{ run.started_at|date:"M d, Y H:i:s" }}
-            </td>
-            <td>
-              {% if run.status == "SUCCESS" %}
-              <span class="badge bg-success-subtle text-success border border-success">
-                <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
-              </span>
-              {% else %}
-              <span class="badge bg-danger-subtle text-danger border border-danger">
-                <i class="bi bi-x-circle-fill me-1"></i> FAILED
-              </span>
-              {% endif %}
-            </td>
-            <td><code>{{ run.records_extracted }}</code> rows</td>
-            <td><strong class="text-success">{{ run.records_loaded }}</strong> rows</td>
-            <td><span class="badge bg-light text-dark border">{{ run.duration_seconds }}s</span></td>
-            <td>
-              <span class="small text-secondary">
-                <i class="bi bi-person-fill"></i> {{ run.triggered_by.username|default:"System" }}
-              </span>
-            </td>
-            <td class="pe-4">
-              {% if run.error_message %}
-              <span class="text-danger small" title="{{ run.error_message }}">
-                <i class="bi bi-exclamation-triangle-fill"></i> Error
-              </span>
-              {% else %}
-              <span class="text-muted small">—</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="7" class="text-center text-muted py-4">
-              <i class="bi bi-activity fs-3 d-block text-secondary mb-1"></i>
-              No execution runs recorded yet. Click <strong>"Run Pipeline Now"</strong> to trigger the first run!
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4">Run #</th>
+          <th>Status</th>
+          <th>Triggered By</th>
+          <th>Extracted</th>
+          <th>Processed</th>
+          <th>Loaded</th>
+          <th>Duration</th>
+          <th class="pe-4">Started At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for exec in executions %}
+        <tr>
+          <td class="ps-4"><span class="font-monospace fw-bold">#{{ exec.id }}</span></td>
+          <td>
+            {% if exec.status == "SUCCESS" %}
+            <span class="badge bg-success-subtle text-success border border-success">
+              <i class="bi bi-check-circle-fill me-1"></i> Success
+            </span>
+            {% elif exec.status == "FAILED" %}
+            <span class="badge bg-danger-subtle text-danger border border-danger">
+              <i class="bi bi-x-circle-fill me-1"></i> Failed
+            </span>
+            {% else %}
+            <span class="badge bg-warning-subtle text-warning border border-warning">{{ exec.status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if exec.is_manual %}
+            <span class="badge bg-light text-dark border">
+              <i class="bi bi-person me-1"></i>{{ exec.trigger_label }}
+            </span>
+            {% else %}
+            <span class="badge bg-info-subtle text-info border border-info">
+              <i class="bi bi-cpu me-1"></i>Celery Cron
+            </span>
+            {% endif %}
+          </td>
+          <td><code>{{ exec.records_extracted }}</code></td>
+          <td><code>{{ exec.records_processed }}</code></td>
+          <td><span class="fw-semibold text-success">{{ exec.records_loaded }}</span></td>
+          <td><span class="badge bg-light text-dark border">{{ exec.duration_seconds }}s</span></td>
+          <td class="pe-4 text-muted small">{{ exec.started_at|date:"Y-m-d H:i:s" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center py-4 text-muted">
+            <i class="bi bi-activity fs-3 d-block text-secondary mb-1"></i>
+            No execution history found yet for this pipeline.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 

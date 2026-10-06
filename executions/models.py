@@ -48,3 +48,14 @@ class PipelineExecution(models.Model):
 
     def __str__(self):
         return f"{self.pipeline.name} - {self.status} ({self.started_at.strftime('%Y-%m-%d %H:%M')})"
+
+    @property
+    def trigger_label(self):
+        if self.triggered_by:
+            return self.triggered_by.username
+        return "Celery Cron"
+
+    @property
+    def is_manual(self):
+        return self.triggered_by is not None
+

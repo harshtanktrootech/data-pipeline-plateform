@@ -7,6 +7,7 @@ from pipelines.views import (
     pipeline_detail_page,
     run_pipeline_page_view,
     pipeline_create_page,
+    schedule_pipeline_view,
 )
 
 urlpatterns = [
@@ -27,4 +28,5 @@ urlpatterns = [
     path("pipelines/create/", pipeline_create_page, name="pipeline-create-page"),
     path("pipelines/<int:pk>/", pipeline_detail_page, name="pipeline-detail-page"),
     path("pipelines/<int:pk>/run/", run_pipeline_page_view, name="pipeline-run-page"),
+    path("pipelines/<int:pk>/schedule/", schedule_pipeline_view, name="pipeline-schedule"),
 ]

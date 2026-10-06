@@ -18,7 +18,6 @@
     <i class="bi bi-plus-lg"></i> Create Pipeline
   </a>
   {% endif %}
-
 </div>
 
 <div class="card shadow-sm border-0">
@@ -31,6 +30,7 @@
             <th>Source</th>
             <th>Target Table</th>
             <th>Status</th>
+            <th>Schedule</th>
             <th>Created By</th>
             <th class="text-end pe-4">Actions</th>
           </tr>
@@ -45,9 +45,15 @@
               </a>
             </td>
 
-            <td><code>{{ pipeline.source|default:"—" }}</code></td>
-            <td><code>{{ pipeline.table_name|default:"—" }}</code></td>
+            <td>
+              <code>{{ pipeline.source|default:"—" }}</code>
+            </td>
 
+            <td>
+              <code>{{ pipeline.table_name|default:"—" }}</code>
+            </td>
+
+            <!-- Pipeline Status -->
             <td>
               {% if pipeline.status == "active" %}
               <span class="badge bg-success-subtle text-success border border-success">Active</span>
@@ -56,10 +62,35 @@
               {% endif %}
             </td>
 
-            <td>{{ pipeline.created_by.username }}</td>
+            <!-- Live Schedule Status -->
+            <td>
+              {% if pipeline.schedule_task %}
+              {% if pipeline.schedule_task.enabled %}
+              <span class="badge bg-success-subtle text-success border border-success">
+                <i class="bi bi-clock-fill me-1"></i> Active
+                (<code>{{ pipeline.schedule_task.crontab.minute }} {{ pipeline.schedule_task.crontab.hour }} * * *</code>)
+              </span>
+              {% else %}
+              <span class="badge bg-warning-subtle text-warning border border-warning">
+                <i class="bi bi-pause-circle me-1"></i> Paused
+              </span>
+              {% endif %}
+              {% else %}
+              <span class="badge bg-light text-muted border">
+                <i class="bi bi-slash-circle me-1"></i> Manual
+              </span>
+              {% endif %}
+            </td>
 
+            <!-- Created By -->
+            <td>
+              {{ pipeline.created_by.username }}
+            </td>
+
+            <!-- Actions -->
             <td class="text-end pe-4">
               <div class="d-inline-flex gap-2">
+
                 <!-- View Details -->
                 <a href="{% url 'pipeline-detail-page' pipeline.id %}" class="btn btn-sm btn-outline-secondary">
                   <i class="bi bi-eye"></i> View
@@ -81,7 +112,7 @@
 
           {% empty %}
           <tr>
-            <td colspan="6" class="text-center text-muted py-5">
+            <td colspan="7" class="text-center text-muted py-5">
               <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
               No pipelines configured yet.
             </td>

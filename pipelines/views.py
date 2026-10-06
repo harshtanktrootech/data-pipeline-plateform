@@ -5,12 +5,19 @@ from django.contrib import messages
 from django.db import connection
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
+from django_celery_beat.models import PeriodicTask
 
 from accounts.permissions import CanManagePipeline
 from pipelines.models import Pipeline
 from pipelines.serializers import PipelineSerializer
 from etl.runner import run_pipeline
 from pipelines.forms import PipelineCreateForm
+from pipelines.services import (
+    schedule_pipeline_cron,
+    get_pipeline_schedule,
+    toggle_pipeline_schedule,
+    delete_pipeline_cron,
+)
 
 
 # ── REST API Views ──
@@ -42,14 +49,26 @@ class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
 
 @login_required(login_url="/admin/login/")
 def pipeline_list_page(request):
-    """Lists all pipelines with RBAC actions."""
-    pipelines = Pipeline.objects.select_related("created_by").all().order_by("-created_at")
+    """Lists all pipelines with RBAC actions and their live schedule status."""
+    pipelines = list(Pipeline.objects.select_related("created_by").all().order_by("-created_at"))
+    
+    # 1. Fetch all scheduled periodic tasks from the DB in a single query
+    scheduled_tasks = {
+        task.name: task
+        for task in PeriodicTask.objects.filter(task="executions.tasks.execute_pipeline_task").select_related("crontab")
+    }
+
+    # 2. Attach live schedule object to each pipeline
+    for pipeline in pipelines:
+        task_name = f"pipeline_cron_run_{pipeline.id}"
+        pipeline.schedule_task = scheduled_tasks.get(task_name)
+
     return render(request, "pipelines/pipeline_list.html", {"pipelines": pipelines})
 
 
 @login_required(login_url="/login/")
 def pipeline_detail_page(request, pk):
-    """Displays pipeline details, dynamic DB table preview, and execution history."""
+    """Displays pipeline details, dynamic DB table preview, execution history, and cron schedule."""
     pipeline = get_object_or_404(Pipeline.objects.select_related("created_by"), pk=pk)
     
     # 1. Fetch live data preview from the dynamic DB table
@@ -64,12 +83,14 @@ def pipeline_detail_page(request, pk):
                 cursor.execute(f'SELECT * FROM "{pipeline.table_name}" LIMIT 5;')
                 preview_headers = [col[0] for col in cursor.description]
                 preview_rows = cursor.fetchall()
-        
         except Exception:
             total_db_rows = 0
 
     # 2. Fetch the 10 most recent execution runs for this pipeline
     executions = pipeline.executions.select_related("triggered_by").all()[:10]
+
+    # 3. Fetch current cron schedule for this pipeline
+    schedule_task = get_pipeline_schedule(pipeline.id)
     
     return render(
         request,
@@ -79,17 +100,18 @@ def pipeline_detail_page(request, pk):
             "preview_headers": preview_headers,
             "preview_rows": preview_rows,
             "total_db_rows": total_db_rows,
-            "executions": executions,  # <-- Passed to template!
+            "executions": executions,
+            "schedule_task": schedule_task,
         },
     )
 
+
 @login_required(login_url="/login/")
 def run_pipeline_page_view(request, pk):
-    """Executes the pipeline and records the user who triggered it."""
+    """Executes the pipeline on-demand and records the user who triggered it."""
     pipeline = get_object_or_404(Pipeline, pk=pk)
     
     if request.method == "POST":
-        # RBAC Check: Admins and Operators only
         is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
         is_operator = request.user.groups.filter(name="Operator").exists()
 
@@ -101,7 +123,6 @@ def run_pipeline_page_view(request, pk):
             messages.error(request, f"Source file not found at: '{pipeline.source}'")
             return redirect("pipeline-detail-page", pk=pk)
         
-        # Pass triggered_by=request.user to attribute the run to the logged-in user
         result = run_pipeline(pipeline, triggered_by=request.user)
         
         if result["status"] == "SUCCESS":
@@ -111,7 +132,6 @@ def run_pipeline_page_view(request, pk):
                 f"Extracted: {result['records_extracted']} | "
                 f"Loaded: {result['records_loaded']} records in {result['duration_seconds']}s."
             )
-        
         else:
             messages.error(request, f"Pipeline execution failed: {result['error']}")
     
@@ -119,9 +139,49 @@ def run_pipeline_page_view(request, pk):
 
 
 @login_required(login_url="/login/")
+def schedule_pipeline_view(request, pk):
+    """Updates or toggles the cron schedule for a pipeline."""
+    pipeline = get_object_or_404(Pipeline, pk=pk)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "save_schedule":
+            frequency = request.POST.get("frequency")
+            
+            # Map presets to cron expressions
+            cron_presets = {
+                "every_1_min": {"minute": "*", "hour": "*"},
+                "every_5_mins": {"minute": "*/5", "hour": "*"},
+                "every_hour": {"minute": "0", "hour": "*"},
+                "daily_midnight": {"minute": "0", "hour": "0"},
+                "weekly_monday": {"minute": "0", "hour": "9", "day_of_week": "mon"},
+            }
+
+            if frequency in cron_presets:
+                schedule_pipeline_cron(pipeline, **cron_presets[frequency])
+                messages.success(request, f"Cron schedule updated successfully for '{pipeline.name}'!")
+            else:
+                messages.error(request, "Invalid schedule preset selected.")
+
+        elif action == "toggle":
+            task = get_pipeline_schedule(pipeline.id)
+            if task:
+                new_state = not task.enabled
+                toggle_pipeline_schedule(pipeline.id, new_state)
+                status_text = "Enabled" if new_state else "Paused"
+                messages.success(request, f"Schedule for '{pipeline.name}' is now {status_text}.")
+
+        elif action == "delete":
+            delete_pipeline_cron(pipeline.id)
+            messages.info(request, f"Schedule removed for '{pipeline.name}'.")
+
+    return redirect("pipeline-detail-page", pk=pk)
+
+
+@login_required(login_url="/login/")
 def pipeline_create_page(request):
     """Allows Admins to create a new pipeline with predefined source file selection."""
-    # RBAC Check: Only Admin can create pipelines
     is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
     
     if not is_admin:
@@ -140,13 +200,8 @@ def pipeline_create_page(request):
             pipeline.save()
 
             messages.success(request, f"Pipeline '{pipeline.name}' created successfully! You can now review and execute it.")
-            
             return redirect("pipeline-detail-page", pk=pipeline.pk)
-
-
     else:
         form = PipelineCreateForm()
     
     return render(request, "pipelines/pipeline_form.html", {"form": form})
-
-    

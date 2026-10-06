@@ -1,0 +1,4 @@
+Product,Quantity,Region,Sales,Orders
+Mouse,30,East,12000,garbage
+###INVALID###, abc, West, 18000, 15
+Monitor,20,NULL,35000,25

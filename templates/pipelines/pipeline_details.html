@@ -4,94 +4,85 @@
 
 {% block content %}
 
+<!-- Top Navigation & Action Buttons -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <a href="{% url 'pipeline-list-page' %}" class="btn btn-outline-secondary">
-    <i class="bi bi-arrow-left"></i> Back to Pipelines
+  <a href="{% url 'pipeline-list-page' %}" class="btn btn-outline-secondary rounded-pill px-3">
+    <i class="bi bi-arrow-left me-1"></i> Back to Pipelines
   </a>
 
-  <!-- Action Buttons based on RBAC -->
   <div class="d-flex gap-2">
-    {% if is_admin %}
-    <a href="/admin/pipelines/pipeline/{{ pipeline.id }}/change/" class="btn btn-outline-warning">
-      <i class="bi bi-pencil-square"></i> Edit
-    </a>
-    {% endif %}
-
     {% if is_operator %}
     <form action="{% url 'pipeline-run-page' pipeline.id %}" method="POST" class="d-inline">
       {% csrf_token %}
-      <button type="submit" class="btn btn-success shadow-sm">
-        <i class="bi bi-play-fill"></i> Run Pipeline Now
+      <button type="submit" class="btn btn-success shadow-sm rounded-pill px-4">
+        <i class="bi bi-play-fill me-1"></i> Run Pipeline Now
       </button>
     </form>
     {% else %}
-    <button class="btn btn-secondary" disabled title="Viewer role cannot execute pipelines">
-      <i class="bi bi-lock-fill"></i> Read Only (Viewer)
+    <button class="btn btn-secondary rounded-pill px-3" disabled title="Viewer role cannot execute pipelines">
+      <i class="bi bi-lock-fill me-1"></i> Read Only (Viewer)
     </button>
     {% endif %}
   </div>
 </div>
 
-<!-- Pipeline Configuration Card -->
-<div class="card shadow-sm border-0 mb-4">
-  <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-    <h2 class="h5 mb-0 fw-bold">{{ pipeline.name }}</h2>
-    {% if pipeline.status == "active" %}
-    <span class="badge bg-success">Active</span>
-    {% else %}
-    <span class="badge bg-secondary">Inactive</span>
-    {% endif %}
+<!-- Pipeline Metadata Overview Card -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-dark text-white py-3 px-4 rounded-top-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-diagram-3-fill text-primary"></i> {{ pipeline.name }}
+      </h5>
+      <span class="badge bg-success-subtle text-success border border-success px-3 py-1">
+        {{ pipeline.status|title }}
+      </span>
+    </div>
   </div>
 
-  <div class="card-body">
+  <div class="card-body p-4">
     <div class="row g-3">
-      <div class="col-md-6">
-        <small class="text-muted d-block">Source Path</small>
-        <code>{{ pipeline.source|default:"Not specified" }}</code>
+      <div class="col-md-3 col-sm-6">
+        <small class="text-muted text-uppercase fw-semibold d-block">Source File</small>
+        <code class="text-dark fs-6">{{ pipeline.source }}</code>
       </div>
-
-      <div class="col-md-6">
-        <small class="text-muted d-block">Target Database Table</small>
-        <span class="badge bg-dark fs-6">{{ pipeline.table_name }}</span>
+      <div class="col-md-3 col-sm-6">
+        <small class="text-muted text-uppercase fw-semibold d-block">Target DB Table</small>
+        <code class="text-primary fs-6">{{ pipeline.table_name }}</code>
       </div>
-
-      <div class="col-md-4">
-        <small class="text-muted d-block">Created By</small>
-        <strong>{{ pipeline.created_by.username }}</strong>
+      <div class="col-md-3 col-sm-6">
+        <small class="text-muted text-uppercase fw-semibold d-block">Total DB Rows</small>
+        <span class="fw-bold fs-6 text-success">{{ total_db_rows }} records</span>
       </div>
-
-      <div class="col-md-4">
-        <small class="text-muted d-block">Created At</small>
-        <strong>{{ pipeline.created_at|date:"d M Y, h:i A" }}</strong>
+      <div class="col-md-3 col-sm-6">
+        <small class="text-muted text-uppercase fw-semibold d-block">Created By</small>
+        <span class="fw-semibold">{{ pipeline.created_by.username }}</span>
       </div>
-
-      <div class="col-md-4">
-        <small class="text-muted d-block">Last Updated</small>
-        <strong>{{ pipeline.updated_at|date:"d M Y, h:i A" }}</strong>
+      {% if pipeline.description %}
+      <div class="col-12 mt-2">
+        <small class="text-muted text-uppercase fw-semibold d-block">Description</small>
+        <p class="mb-0 text-secondary">{{ pipeline.description }}</p>
       </div>
+      {% endif %}
     </div>
   </div>
 </div>
 
-<!-- Dynamic Database Table Preview -->
-<div class="card shadow-sm border-0">
-  <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-    <div>
-      <h3 class="h6 mb-0 fw-bold">
-        <i class="bi bi-table text-primary me-2"></i> Database Table Preview (<code>{{ pipeline.table_name }}</code>)
-      </h3>
-      <small class="text-muted">Total records in database: <strong>{{ total_db_rows }}</strong></small>
-    </div>
+<!-- Live DB Table Data Preview -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white py-3 px-4 border-bottom">
+    <h6 class="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
+      <i class="bi bi-table text-primary"></i> Live Database Preview (Top 5 Records)
+    </h6>
   </div>
-
   <div class="card-body p-0">
-    {% if preview_rows %}
     <div class="table-responsive">
-      <table class="table table-sm table-striped table-hover mb-0">
+      <table class="table table-striped table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
             {% for header in preview_headers %}
             <th class="ps-3">{{ header }}</th>
+            {% empty %}
+            <th class="ps-3">Table Structure</th>
             {% endfor %}
           </tr>
         </thead>
@@ -99,21 +90,92 @@
           {% for row in preview_rows %}
           <tr>
             {% for cell in row %}
-            <td class="ps-3">{{ cell }}</td>
+            <td class="ps-3 font-monospace small">{{ cell }}</td>
             {% endfor %}
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="text-center text-muted py-4">
+              <i class="bi bi-inbox fs-2 d-block text-secondary mb-1"></i>
+              No data loaded yet. Click <strong>"Run Pipeline Now"</strong> to execute ETL and populate data.
+            </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    {% else %}
-    <div class="text-center py-5 text-muted">
-      <i class="bi bi-database-slash fs-1 d-block mb-2"></i>
-      No data found in table <code>{{ pipeline.table_name }}</code>.
-      <div class="small mt-1">Click <strong>"Run Pipeline Now"</strong> above to extract, transform, and load data.
-      </div>
+  </div>
+</div>
+
+<!-- Execution History & Performance Monitoring Section -->
+<div class="card border-0 shadow-sm rounded-4">
+  <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+    <h6 class="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
+      <i class="bi bi-clock-history text-primary"></i> Execution History & Monitoring
+    </h6>
+    <span class="badge bg-light text-muted border">Latest 10 Runs</span>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Run Timestamp</th>
+            <th>Status</th>
+            <th>Extracted</th>
+            <th>Loaded</th>
+            <th>Duration</th>
+            <th>Triggered By</th>
+            <th class="pe-4">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in executions %}
+          <tr>
+            <td class="ps-4 font-monospace small">
+              {{ run.started_at|date:"M d, Y H:i:s" }}
+            </td>
+            <td>
+              {% if run.status == "SUCCESS" %}
+              <span class="badge bg-success-subtle text-success border border-success">
+                <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
+              </span>
+              {% else %}
+              <span class="badge bg-danger-subtle text-danger border border-danger">
+                <i class="bi bi-x-circle-fill me-1"></i> FAILED
+              </span>
+              {% endif %}
+            </td>
+            <td><code>{{ run.records_extracted }}</code> rows</td>
+            <td><strong class="text-success">{{ run.records_loaded }}</strong> rows</td>
+            <td><span class="badge bg-light text-dark border">{{ run.duration_seconds }}s</span></td>
+            <td>
+              <span class="small text-secondary">
+                <i class="bi bi-person-fill"></i> {{ run.triggered_by.username|default:"System" }}
+              </span>
+            </td>
+            <td class="pe-4">
+              {% if run.error_message %}
+              <span class="text-danger small" title="{{ run.error_message }}">
+                <i class="bi bi-exclamation-triangle-fill"></i> Error
+              </span>
+              {% else %}
+              <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">
+              <i class="bi bi-activity fs-3 d-block text-secondary mb-1"></i>
+              No execution runs recorded yet. Click <strong>"Run Pipeline Now"</strong> to trigger the first run!
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    {% endif %}
   </div>
 </div>
 

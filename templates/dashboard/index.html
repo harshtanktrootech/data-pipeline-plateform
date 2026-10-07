@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">
+            <i class="bi bi-speedometer2 text-primary me-2"></i>Dashboard &amp; Analytics
+        </h2>
+        <p class="text-muted mb-0">High-level pipeline metrics and recent execution activities.</p>
+    </div>
+    <div>
+        <a href="{% url 'pipeline-create-page' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> New Pipeline
+        </a>
+    </div>
+</div>
+
+<!-- ── High-Level Metric Cards ── -->
+<div class="row g-3 mb-4">
+    <!-- 1. Total Pipelines -->
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted text-uppercase fw-semibold small">Total Pipelines</div>
+                        <h3 class="fw-bold my-1 text-dark">{{ total_pipelines }}</h3>
+                    </div>
+                    <div class="p-3 bg-primary-subtle text-primary rounded-circle">
+                        <i class="bi bi-diagram-3 fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Successful Executions -->
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted text-uppercase fw-semibold small">Successful Runs</div>
+                        <h3 class="fw-bold my-1 text-success">{{ successful_executions }}</h3>
+                    </div>
+                    <div class="p-3 bg-success-subtle text-success rounded-circle">
+                        <i class="bi bi-check-circle fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Failed Executions -->
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-danger">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted text-uppercase fw-semibold small">Failed Runs</div>
+                        <h3 class="fw-bold my-1 text-danger">{{ failed_executions }}</h3>
+                    </div>
+                    <div class="p-3 bg-danger-subtle text-danger rounded-circle">
+                        <i class="bi bi-x-circle fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Running Pipelines -->
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted text-uppercase fw-semibold small">Running Pipelines</div>
+                        <h3 class="fw-bold my-1 text-warning">{{ running_executions }}</h3>
+                    </div>
+                    <div class="p-3 bg-warning-subtle text-warning rounded-circle">
+                        <i class="bi bi-arrow-repeat fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Average Execution Time -->
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted text-uppercase fw-semibold small">Avg Run Time</div>
+                        <h3 class="fw-bold my-1 text-info">{{ avg_execution_time }}s</h3>
+                    </div>
+                    <div class="p-3 bg-info-subtle text-info rounded-circle">
+                        <i class="bi bi-stopwatch fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Recent Pipeline Activities ── -->
+<div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+            <i class="bi bi-clock-history text-primary me-2"></i>Recent Pipeline Activities
+        </h5>
+        <a href="{% url 'pipeline-list-page' %}" class="btn btn-sm btn-outline-secondary">
+            View All Pipelines &rarr;
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Pipeline</th>
+                        <th>Status</th>
+                        <th>Triggered By</th>
+                        <th>Records (Extracted / Processed / Loaded)</th>
+                        <th>Duration</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in recent_activities %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'pipeline-detail-page' activity.pipeline.id %}"
+                                class="fw-semibold text-decoration-none">
+                                {{ activity.pipeline.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if activity.status == 'SUCCESS' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Success</span>
+                            {% elif activity.status == 'FAILED' %}
+                            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Failed</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark"><i
+                                    class="bi bi-arrow-repeat me-1"></i>Running</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>{{ activity.trigger_label }}
+                            </small>
+                        </td>
+                        <td>
+                            <small class="fw-semibold">
+                                {{ activity.records_extracted }} &rarr; {{ activity.records_processed }} &rarr;
+                                {{ activity.records_loaded }}
+                            </small>
+                        </td>
+                        <td><small class="text-muted">{{ activity.duration_seconds|floatformat:2 }}s</small></td>
+                        <td><small class="text-muted">{{ activity.started_at|timesince }} ago</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i> No pipeline activities found yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

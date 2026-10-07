@@ -11,6 +11,7 @@ from pipelines.views import (
     schedule_pipeline_view,
 )
 from audit.views import audit_log_list_page
+from dashboard.views import dashboard_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -25,7 +26,8 @@ urlpatterns = [
     path("api/pipelines/", include("pipelines.urls")),
 
     # Frontend HTML Routes
-    path("", pipeline_list_page, name="home"),
+    path("", dashboard_view, name="dashboard"),
+    path("dashboard/", dashboard_view, name="dashboard-page"),
     path("pipelines/", pipeline_list_page, name="pipeline-list-page"),
     path("pipelines/create/", pipeline_create_page, name="pipeline-create-page"),
     path("pipelines/<int:pk>/edit/", pipeline_edit_page, name="pipeline-edit-page"),

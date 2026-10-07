@@ -4,10 +4,10 @@ from audit.models import AuditLog
 
 @admin.register(AuditLog)
 class AuditLogAdmin(admin.ModelAdmin):
-    list_display = ("id", "timestamp", "user", "action", "resource", "ip_address")
+    list_display = ("id", "timestamp", "user", "action", "resource")
     list_filter = ("action", "user", "timestamp")
-    search_fields = ("resource", "details", "user__username", "ip_address")
-    readonly_fields = ("user", "action", "resource", "details", "ip_address", "timestamp")
+    search_fields = ("resource", "details", "user__username")
+    readonly_fields = ("user", "action", "resource", "details", "timestamp")
     ordering = ("-timestamp",)
 
     def has_add_permission(self, request):

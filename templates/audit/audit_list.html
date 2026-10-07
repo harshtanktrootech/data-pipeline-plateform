@@ -31,7 +31,6 @@
                     <th>User</th>
                     <th>Action</th>
                     <th>Resource</th>
-                    <th>IP Address</th>
                     <th class="pe-4">Details</th>
                 </tr>
             </thead>
@@ -43,8 +42,9 @@
                     </td>
                     <td>
                         {% if log.user %}
-                        <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>{{
-                            log.user.username }}</span>
+                        <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i>
+                            {{ log.user.username }}
+                        </span>
                         {% else %}
                         <span class="badge bg-secondary-subtle text-secondary border"><i
                                 class="bi bi-cpu me-1"></i>System</span>
@@ -56,8 +56,6 @@
                         </span>
                     </td>
                     <td><code class="text-dark fw-semibold">{{ log.resource }}</code></td>
-                    <td><span class="font-monospace small text-secondary">{{ log.ip_address|default:"127.0.0.1"
-                            }}</span></td>
                     <td class="pe-4 text-secondary small">{{ log.details|default:"—" }}</td>
                 </tr>
                 {% empty %}

@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Create Pipeline | Data Pipeline Platform{% endblock %}
+{% block title %}
+  {% if is_edit %}
+    Edit {{ pipeline.name }} | Data Pipeline Platform
+  {% else %}
+    Create Pipeline | Data Pipeline Platform
+  {% endif %}
+{% endblock %}
+
+
 
 {% block content %}
 <div class="row justify-content-center">
@@ -8,8 +16,9 @@
 
         <!-- Top Bar -->
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <a href="{% url 'pipeline-list-page' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
-                <i class="bi bi-arrow-left me-1"></i> Pipelines
+            <a href="{% if is_edit %}{% url 'pipeline-detail-page' pipeline.id %}{% else %}{% url 'pipeline-list-page' %}{% endif %}"
+                class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> {% if is_edit %}Back to Details{% else %}Pipelines{% endif %}
             </a>
             <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
                 <i class="bi bi-shield-check me-1"></i> Admin
@@ -23,11 +32,16 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-primary text-white rounded-3 p-2 d-flex align-items-center justify-content-center"
                         style="width: 42px; height: 42px;">
-                        <i class="bi bi-plus-lg fs-5"></i>
+                        <i class="bi {% if is_edit %}bi-pencil-square{% else %}bi-plus-lg{% endif %} fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0 text-dark">Create New Pipeline</h5>
-                        <small class="text-muted">Configure and register a dataset pipeline</small>
+                        <h5 class="fw-bold mb-0 text-dark">
+                            {% if is_edit %}Edit Pipeline: {{ pipeline.name }}{% else %}Create New Pipeline{% endif %}
+                        </h5>
+                        <small class="text-muted">
+                            {% if is_edit %}Modify dataset configuration and metadata{% else %}Configure and register a
+                            dataset pipeline{% endif %}
+                        </small>
                     </div>
                 </div>
             </div>
@@ -115,7 +129,7 @@
                             <div class="text-danger small mt-1">{{ form.table_name.errors.0 }}</div>
                             {% else %}
                             <div class="form-text small text-muted mt-1" id="table_preview_hint">
-                                Auto-generates from name if left empty (e.g. <code>student_pipeline_data</code>).
+                                Target database table where records are loaded.
                             </div>
                             {% endif %}
                         </div>
@@ -123,12 +137,20 @@
 
                     <!-- Action Buttons -->
                     <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
-                        <a href="{% url 'pipeline-list-page' %}" class="btn btn-light border px-3 rounded-3">
+                        <a href="{% if is_edit %}{% url 'pipeline-detail-page' pipeline.id %}{% else %}{% url 'pipeline-list-page' %}{% endif %}"
+                            class="btn btn-light border px-3 rounded-3">
                             Cancel
                         </a>
                         <button type="submit" class="btn btn-primary px-4 rounded-3 shadow-sm">
-                            <i class="bi bi-check-lg me-1"></i> Create Pipeline
+                            <i class="bi bi-check-lg me-1"></i>
+                            {% if is_edit %}
+                                Save Changes
+                            {% else %}
+                                Create Pipeline
+                            {% endif %}
                         </button>
+
+
                     </div>
 
                 </form>
@@ -139,7 +161,6 @@
 </div>
 
 <script>
-    // Auto-suggest table name dynamically as user types pipeline name
     const nameInput = document.getElementById('id_name');
     const tableInput = document.getElementById('id_table_name');
     const hintEl = document.getElementById('table_preview_hint');
@@ -150,8 +171,6 @@
                 const clean = nameInput.value.toLowerCase().trim().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
                 if (clean) {
                     hintEl.innerHTML = `Auto-generates as: <code>${clean}_data</code>`;
-                } else {
-                    hintEl.innerHTML = `Auto-generates from name if left empty (e.g. <code>student_pipeline_data</code>).`;
                 }
             }
         });

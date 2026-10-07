@@ -132,15 +132,6 @@ def run_pipeline_page_view(request, pk):
             return redirect("pipeline-detail-page", pk=pk)
         
         result = run_pipeline(pipeline, triggered_by=request.user)
-        
-        # Log Audit event for Pipeline Execution
-        log_action(
-            request.user,
-            "PIPELINE_RUN",
-            f"Pipeline '{pipeline.name}' (#{pipeline.id})",
-            f"Status: {result['status']}, Loaded: {result.get('records_loaded', 0)} rows in {result.get('duration_seconds', 0)}s",
-            request
-        )
 
         if result["status"] == "SUCCESS":
             messages.success(
@@ -251,3 +242,61 @@ def pipeline_create_page(request):
         form = PipelineCreateForm()
     
     return render(request, "pipelines/pipeline_form.html", {"form": form})
+
+
+
+@login_required(login_url="/login/")
+def pipeline_edit_page(request, pk):
+    """Allows Admins to edit an existing pipeline and logs changes to Audit Log."""
+    pipeline = get_object_or_404(Pipeline, pk=pk)
+
+    # 1. RBAC Check: Only Admin can edit pipelines
+    is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
+    if not is_admin:
+        messages.error(request, "Permission Denied: Only Admins can edit pipelines.")
+        return redirect("pipeline-detail-page", pk=pk)
+
+    if request.method == "POST":
+        # Keep track of old values to record in Audit Log
+        old_name = pipeline.name
+        old_source = pipeline.source
+        old_table = pipeline.table_name
+
+        form = PipelineCreateForm(request.POST, instance=pipeline)
+        if form.is_valid():
+            updated_pipeline = form.save()
+
+            # Record what changed for Audit Trail
+            changes = []
+            if old_name != updated_pipeline.name:
+                changes.append(f"Name: '{old_name}' → '{updated_pipeline.name}'")
+            if old_source != updated_pipeline.source:
+                changes.append(f"Source: '{old_source}' → '{updated_pipeline.source}'")
+            if old_table != updated_pipeline.table_name:
+                changes.append(f"Table: '{old_table}' → '{updated_pipeline.table_name}'")
+
+            change_summary = ", ".join(changes) if changes else "Updated metadata/description"
+
+            # 2. Save Audit Log
+            log_action(
+                request.user,
+                "PIPELINE_UPDATE",
+                f"Pipeline '{updated_pipeline.name}' (#{updated_pipeline.id})",
+                change_summary,
+                request
+            )
+
+            messages.success(request, f"Pipeline '{updated_pipeline.name}' updated successfully!")
+            return redirect("pipeline-detail-page", pk=updated_pipeline.pk)
+    else:
+        form = PipelineCreateForm(instance=pipeline)
+
+    return render(
+        request,
+        "pipelines/pipeline_form.html",
+        {
+            "form": form,
+            "pipeline": pipeline,
+            "is_edit": True,  # Flags template that we are editing
+        }
+    )

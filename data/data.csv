@@ -1,0 +1,10 @@
+cmp     employee_id,nam    e,role,email,phone
+1,Harsh Tank,Developer,HARSH@gmail.com,9876543210
+2,Rahul Sharma,developer,RAHUL@gmail.com,9876543211
+3, Priya Patel ,Manager,priya@gmail.com,9876543212
+4,Amit Shah,Tester,amit@gmail.com,9876543213
+5,Neha Mehta,HR,neha@gmail.com,9876543214
+6,Harhs tank,Developer,raj@gmail.com,9876543215
+7,,Tester,,9876543216
+8,  Karan Joshi  ,developer,karan@gmail.com,NULL
+9,Meena Patel,HR,N/A,9876543218

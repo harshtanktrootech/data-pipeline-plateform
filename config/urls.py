@@ -8,6 +8,7 @@ from pipelines.views import (
     run_pipeline_page_view,
     pipeline_create_page,
     pipeline_edit_page,
+    pipeline_delete_page,
     schedule_pipeline_view,
 )
 from audit.views import audit_log_list_page
@@ -31,6 +32,7 @@ urlpatterns = [
     path("pipelines/", pipeline_list_page, name="pipeline-list-page"),
     path("pipelines/create/", pipeline_create_page, name="pipeline-create-page"),
     path("pipelines/<int:pk>/edit/", pipeline_edit_page, name="pipeline-edit-page"),
+    path("pipelines/<int:pk>/delete/", pipeline_delete_page, name="pipeline-delete-page"),
     path("pipelines/<int:pk>/", pipeline_detail_page, name="pipeline-detail-page"),
     path("pipelines/<int:pk>/run/", run_pipeline_page_view, name="pipeline-run-page"),
     path("pipelines/<int:pk>/schedule/", schedule_pipeline_view, name="pipeline-schedule"),

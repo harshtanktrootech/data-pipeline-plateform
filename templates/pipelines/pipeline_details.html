@@ -11,11 +11,15 @@
   </a>
 
   <div class="d-flex align-items-center gap-2">
-    <!-- Admin only: Edit Pipeline Button -->
+    <!-- Admin only: Edit & Delete Pipeline Buttons -->
     {% if is_admin %}
     <a href="{% url 'pipeline-edit-page' pipeline.id %}" class="btn btn-outline-warning rounded-pill px-3 shadow-sm">
       <i class="bi bi-pencil-square me-1"></i> Edit Pipeline
     </a>
+    <button type="button" class="btn btn-outline-danger rounded-pill px-3 shadow-sm" data-bs-toggle="modal"
+      data-bs-target="#deletePipelineModal">
+      <i class="bi bi-trash3-fill me-1"></i> Delete Pipeline
+    </button>
     {% endif %}
 
     <!-- Admin & Operator: Run Pipeline Button -->
@@ -272,5 +276,41 @@
     </table>
   </div>
 </div>
+
+<!-- Delete Pipeline Confirmation Modal (Admin Only) -->
+{% if is_admin %}
+<div class="modal fade" id="deletePipelineModal" tabindex="-1" aria-labelledby="deletePipelineModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title text-danger fw-bold d-flex align-items-center gap-2" id="deletePipelineModalLabel">
+          <i class="bi bi-exclamation-triangle-fill"></i> Delete Pipeline
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-3">
+        <p class="mb-2">Are you sure you want to delete pipeline <strong class="text-dark">{{ pipeline.name }}</strong>?
+        </p>
+        <div class="alert alert-danger mb-0 small">
+          <i class="bi bi-info-circle me-1"></i>
+          <strong>Warning:</strong> This will permanently delete the pipeline configuration, all execution logs, and any
+          associated cron schedules. This action cannot be undone.
+        </div>
+      </div>
+      <div class="modal-footer border-top-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-3"
+          data-bs-dismiss="modal">Cancel</button>
+        <form action="{% url 'pipeline-delete-page' pipeline.id %}" method="POST" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
+            <i class="bi bi-trash3-fill me-1"></i> Confirm Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {% endblock %}

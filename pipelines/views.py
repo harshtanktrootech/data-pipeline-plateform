@@ -300,3 +300,40 @@ def pipeline_edit_page(request, pk):
             "is_edit": True,  # Flags template that we are editing
         }
     )
+
+
+@login_required(login_url="/login/")
+def pipeline_delete_page(request, pk):
+    """Allows Admins to delete a pipeline, cleans up Celery Beat schedules, and logs audit action."""
+    pipeline = get_object_or_404(Pipeline, pk=pk)
+
+    # 1. RBAC Check: Only Admin can delete pipelines
+    is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
+    if not is_admin:
+        messages.error(request, "Permission Denied: Only Admins can delete pipelines.")
+        return redirect("pipeline-detail-page", pk=pk)
+
+    if request.method == "POST":
+        pipeline_name = pipeline.name
+        pipeline_id = pipeline.id
+
+        # Clean up any scheduled cron job in Celery Beat
+        delete_pipeline_cron(pipeline_id)
+
+        # Delete the pipeline (executions cascade delete automatically)
+        pipeline.delete()
+
+        # Record Audit Log
+        log_action(
+            request.user,
+            "PIPELINE_DELETE",
+            f"Pipeline '{pipeline_name}' (#{pipeline_id})",
+            "Deleted pipeline and associated cron schedules",
+            request
+        )
+
+        messages.success(request, f"Pipeline '{pipeline_name}' has been deleted successfully.")
+        return redirect("pipeline-list-page")
+
+    return redirect("pipeline-detail-page", pk=pk)
+

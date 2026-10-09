@@ -36,9 +36,18 @@ class PipelineCreateForm(forms.ModelForm):
         }),
     )
 
+    status = forms.ChoiceField(
+        choices=Pipeline.STATUS_CHOICES,
+        widget=forms.Select(attrs={
+            "class": "form-select",
+            "id": "id_status",
+        }),
+        initial="active",
+    )
+
     class Meta:
         model = Pipeline
-        fields = ["name", "source", "description", "table_name"]
+        fields = ["name", "source", "status", "description", "table_name"]
         widgets = {
             "name": forms.TextInput(attrs={
                 "class": "form-control",

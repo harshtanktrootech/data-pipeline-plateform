@@ -70,7 +70,8 @@ def run_pipeline(pipeline: Pipeline, triggered_by=None, source_type=None, max_re
             }
 
         except Exception as e:
-            if attempt >= max_retries:
+            is_non_retryable = isinstance(e, (FileNotFoundError, ValueError)) or not getattr(pipeline, "source", None)
+            if attempt >= max_retries or is_non_retryable:
                 duration = round(time.time() - start_time, 4)
                 completed_at = timezone.now()
 

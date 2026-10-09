@@ -127,8 +127,8 @@ def run_pipeline_page_view(request, pk):
             messages.error(request, "Permission Denied: Viewer role cannot execute pipelines.")
             return redirect("pipeline-detail-page", pk=pk)
         
-        if not os.path.exists(pipeline.source):
-            messages.error(request, f"Source file not found at: '{pipeline.source}'")
+        if pipeline.status != "active":
+            messages.error(request, f"Cannot execute pipeline '{pipeline.name}': Pipeline is inactive. Please activate it first.")
             return redirect("pipeline-detail-page", pk=pk)
         
         result = run_pipeline(pipeline, triggered_by=request.user)
@@ -261,6 +261,7 @@ def pipeline_edit_page(request, pk):
         old_name = pipeline.name
         old_source = pipeline.source
         old_table = pipeline.table_name
+        old_status = pipeline.status
 
         form = PipelineCreateForm(request.POST, instance=pipeline)
         if form.is_valid():
@@ -274,6 +275,8 @@ def pipeline_edit_page(request, pk):
                 changes.append(f"Source: '{old_source}' → '{updated_pipeline.source}'")
             if old_table != updated_pipeline.table_name:
                 changes.append(f"Table: '{old_table}' → '{updated_pipeline.table_name}'")
+            if old_status != updated_pipeline.status:
+                changes.append(f"Status: '{old_status}' → '{updated_pipeline.status}'")
 
             change_summary = ", ".join(changes) if changes else "Updated metadata/description"
 
@@ -336,4 +339,42 @@ def pipeline_delete_page(request, pk):
         return redirect("pipeline-list-page")
 
     return redirect("pipeline-detail-page", pk=pk)
+
+
+@login_required(login_url="/login/")
+def pipeline_toggle_status_page(request, pk):
+    """Allows Admins to quickly toggle a pipeline between active and inactive status."""
+    pipeline = get_object_or_404(Pipeline, pk=pk)
+
+    # 1. RBAC Check: Only Admin can toggle pipeline status
+    is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
+    if not is_admin:
+        messages.error(request, "Permission Denied: Only Admins can change pipeline status.")
+        return redirect("pipeline-detail-page", pk=pk)
+
+    if request.method == "POST":
+        old_status = pipeline.status
+        new_status = "inactive" if old_status == "active" else "active"
+        pipeline.status = new_status
+        pipeline.save()
+
+        # Record Audit Log
+        log_action(
+            request.user,
+            "PIPELINE_STATUS_CHANGE",
+            f"Pipeline '{pipeline.name}' (#{pipeline.id})",
+            f"Status changed from '{old_status.upper()}' to '{new_status.upper()}'",
+            request,
+        )
+
+        status_label = "Activated" if new_status == "active" else "Deactivated"
+        messages.success(request, f"Pipeline '{pipeline.name}' has been {status_label.lower()} successfully (Status: {new_status.title()}).")
+
+        next_url = request.POST.get("next")
+        if next_url == "pipeline-list-page":
+            return redirect("pipeline-list-page")
+        return redirect("pipeline-detail-page", pk=pk)
+
+    return redirect("pipeline-detail-page", pk=pk)
+
 

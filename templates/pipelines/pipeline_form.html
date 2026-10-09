@@ -91,7 +91,23 @@
                         {% endif %}
                     </div>
 
-                    <!-- 3. Description -->
+                    <!-- 3. Pipeline Status -->
+                    <div class="mb-3">
+                        <label for="id_status" class="form-label fw-semibold small text-secondary text-uppercase mb-1">
+                            Status <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-primary">
+                                <i class="bi bi-toggle-on"></i>
+                            </span>
+                            {{ form.status }}
+                        </div>
+                        {% if form.status.errors %}
+                        <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 4. Description -->
                     <div class="mb-3">
                         <label for="id_description"
                             class="form-label fw-semibold small text-secondary text-uppercase mb-1">

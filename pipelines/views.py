@@ -152,6 +152,13 @@ def schedule_pipeline_view(request, pk):
     pipeline = get_object_or_404(Pipeline, pk=pk)
 
     if request.method == "POST":
+        is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
+        is_operator = request.user.groups.filter(name="Operator").exists()
+
+        if not (is_admin or is_operator):
+            messages.error(request, "Permission Denied: Viewer role cannot configure or modify schedules.")
+            return redirect("pipeline-detail-page", pk=pk)
+
         action = request.POST.get("action")
 
         if action == "save_schedule":

@@ -6,6 +6,8 @@ class AuditLog(models.Model):
     ACTION_CHOICES = [
         ("USER_LOGIN", "User Login"),
         ("USER_LOGOUT", "User Logout"),
+        ("USER_CREATE", "User Created"),
+        ("USER_ROLE_UPDATE", "User Role Updated"),
         ("PIPELINE_CREATE", "Pipeline Created"),
         ("PIPELINE_UPDATE", "Pipeline Updated"),
         ("PIPELINE_DELETE", "Pipeline Deleted"),

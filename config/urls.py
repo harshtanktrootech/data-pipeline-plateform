@@ -1,7 +1,13 @@
 # config/urls.py
 from django.contrib import admin
 from django.urls import include, path
-from accounts.views import login_view, register_view, logout_view
+from accounts.views import (
+    login_view,
+    register_view,
+    logout_view,
+    user_management_view,
+    user_role_update_view,
+)
 from pipelines.views import (
     pipeline_list_page,
     pipeline_detail_page,
@@ -22,6 +28,10 @@ urlpatterns = [
     path("login/", login_view, name="login-page"),
     path("register/", register_view, name="register-page"),
     path("logout/", logout_view, name="logout-page"),
+
+    # User Management Routes (Admin Only)
+    path("users/", user_management_view, name="user-management-page"),
+    path("users/<int:user_id>/update-role/", user_role_update_view, name="user-update-role"),
 
     # REST APIs
     path("api/accounts/", include("accounts.urls")),

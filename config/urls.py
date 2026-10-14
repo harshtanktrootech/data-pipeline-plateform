@@ -7,6 +7,7 @@ from accounts.views import (
     logout_view,
     user_management_view,
     user_role_update_view,
+    user_delete_view,
 )
 from pipelines.views import (
     pipeline_list_page,
@@ -32,6 +33,7 @@ urlpatterns = [
     # User Management Routes (Admin Only)
     path("users/", user_management_view, name="user-management-page"),
     path("users/<int:user_id>/update-role/", user_role_update_view, name="user-update-role"),
+    path("users/<int:user_id>/delete/", user_delete_view, name="user-delete"),
 
     # REST APIs
     path("api/accounts/", include("accounts.urls")),

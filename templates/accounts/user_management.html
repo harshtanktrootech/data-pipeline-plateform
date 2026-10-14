@@ -65,18 +65,36 @@
                     </td>
                     <td class="small text-muted">{{ item.user.date_joined|date:"M d, Y" }}</td>
                     <td class="text-end pe-4">
-                        <!-- Role Update Form -->
-                        <form action="{% url 'user-update-role' item.user.id %}" method="POST" class="d-inline-flex gap-2 align-items-center">
-                            {% csrf_token %}
-                            <select name="role" class="form-select form-select-sm w-auto" {% if item.user == request.user %}disabled{% endif %}>
-                                <option value="Viewer" {% if item.role == "Viewer" %}selected{% endif %}>Viewer</option>
-                                <option value="Operator" {% if item.role == "Operator" %}selected{% endif %}>Operator</option>
-                                <option value="Admin" {% if item.role == "Admin" %}selected{% endif %}>Admin</option>
-                            </select>
-                            <button type="submit" class="btn btn-sm btn-outline-primary" {% if item.user == request.user %}disabled title="Cannot change your own role"{% endif %}>
-                                Update
-                            </button>
-                        </form>
+                        <div class="d-inline-flex gap-2 align-items-center">
+                            <!-- Role Update Form -->
+                            <form action="{% url 'user-update-role' item.user.id %}" method="POST" class="d-inline-flex gap-1 align-items-center m-0">
+                                {% csrf_token %}
+                                <select name="role" class="form-select form-select-sm w-auto" {% if item.user == request.user %}disabled{% endif %}>
+                                    <option value="Viewer" {% if item.role == "Viewer" %}selected{% endif %}>Viewer</option>
+                                    <option value="Operator" {% if item.role == "Operator" %}selected{% endif %}>Operator</option>
+                                    <option value="Admin" {% if item.role == "Admin" %}selected{% endif %}>Admin</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-primary" {% if item.user == request.user %}disabled title="Cannot change your own role"{% endif %}>
+                                    Update
+                                </button>
+                            </form>
+
+                            <!-- User Delete Form -->
+                            <form action="{% url 'user-delete' item.user.id %}" method="POST" class="d-inline m-0">
+                                {% csrf_token %}
+                                {% if item.user == request.user %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="You cannot delete your own account">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% else %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                    onclick="return confirm('Are you sure you want to permanently delete user \'{{ item.user.username }}\'? Any pipelines they created will be safely retained.');"
+                                    title="Delete user '{{ item.user.username }}'">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                                {% endif %}
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}

@@ -221,3 +221,49 @@ def user_role_update_view(request, user_id):
             messages.error(request, "Invalid role selected.")
 
     return redirect("user-management-page")
+
+
+@login_required
+@admin_only
+def user_delete_view(request, user_id):
+    """
+    Allows Admins to delete a user account safely and logs the action to Audit Log.
+    """
+    if request.method == "POST":
+        target_user = get_object_or_404(User, id=user_id)
+
+        # Safety Check 1: Admin cannot delete their own account
+        if target_user == request.user:
+            messages.error(request, "Safety Warning: You cannot delete your own account.")
+            return redirect("user-management-page")
+
+        # Safety Check 2: Prevent deleting the only superuser
+        if target_user.is_superuser and User.objects.filter(is_superuser=True).count() <= 1:
+            messages.error(request, "Safety Warning: Cannot delete the only superuser account.")
+            return redirect("user-management-page")
+
+        username = target_user.username
+        user_id_val = target_user.id
+        role = "Admin" if target_user.is_staff or target_user.groups.filter(name="Admin").exists() else (
+            "Operator" if target_user.groups.filter(name="Operator").exists() else "Viewer"
+        )
+
+        # Reassign any pipelines created by this user to the requesting Admin
+        # so data pipelines are preserved safely
+        target_user.pipelines.update(created_by=request.user)
+
+        target_user.delete()
+
+        # Log Audit Action
+        log_action(
+            user=request.user,
+            action="USER_DELETE",
+            resource=f"User #{user_id_val} ({username})",
+            details=f"User '{username}' (Role: {role}) deleted by Admin '{request.user.username}'",
+            request=request,
+        )
+
+        messages.success(request, f"User '{username}' has been deleted successfully.")
+
+    return redirect("user-management-page")
+

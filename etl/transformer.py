@@ -1,23 +1,20 @@
 import pandas as pd
 
-
-def transform_data(df: pd.DataFrame):
+def transform_data(df):
     """
-    Dynamically cleans ANY DataFrame:
-    1. Normalizes column headers.
-    2. Drops completely empty rows.
-    3. Cleans all text columns (strip whitespace, Title Case for text, lowercase for emails).
-    4. Replaces fake null strings with real None.
-    5. Drops rows missing primary data.
-    6. Auto-detects and converts numeric columns.
-    7. Deduplicates records.
-    8. Returns list of clean dictionaries.
+    Standard ETL Data Cleaning:
+    1. Standardizes headers to clean snake_case.
+    2. Drops fully empty rows.
+    3. Strips whitespace and normalizes empty/null values to None.
+    4. Removes duplicate records.
+    5. Returns cleaned list of dictionaries.
     """
     if df is None or df.empty:
-        return []
+        raise ValueError("Data Validation Error: Input dataset is empty.")
 
     df = df.copy()
 
+    # 1. Standardize column names: lowercase, strip, spaces to underscores
     df.columns = (
         df.columns.astype(str)
         .str.strip()
@@ -25,58 +22,25 @@ def transform_data(df: pd.DataFrame):
         .str.replace(r"\s+", "_", regex=True)
     )
 
+    # 2. Drop completely empty rows
     df = df.dropna(how="all")
 
+    # 3. Strip whitespace from string columns and convert missing strings to None
     text_columns = df.select_dtypes(include=["object", "string"]).columns
-
     for col in text_columns:
-        df[col] = df[col].astype(str).str.replace(r"\s+", " ", regex=True).str.strip()
-        df[col] = df[col].replace(
-            ["", "nan", "NaN", "None", "null", "NULL", "NA", "na", "N/A"],
-            None,
-        )
+        df[col] = df[col].astype(str).str.strip()
+        df[col] = df[col].replace(["", "nan", "NaN", "None", "null", "NULL", "NA", "N/A"], None)
 
-        # Lowercase email addresses, Title Case for regular text, preserve None
-        df[col] = df[col].apply(
-            lambda val: val.lower() if isinstance(val, str) and "@" in val
-            else (val.title() if isinstance(val, str) else val)
-        )
+    # 4. Remove duplicate rows
+    df = df.drop_duplicates()
 
-    primary_col = df.columns[0]
-    df = df.dropna(subset=[primary_col])
+    # 5. Validation check: Ensure valid rows remain
+    if df.empty:
+        raise ValueError("Data Validation Error: 0 valid records remained after cleaning.")
 
-    for col in df.columns:
-        if df[col].dtype in ["int64", "float64", "int32", "float32"]:
-            continue
-
-        converted = pd.to_numeric(df[col], errors="coerce")
-        non_null_count = df[col].notna().sum()
-
-        if non_null_count == 0:
-            continue
-
-        success_count = converted.notna().sum()
-        success_rate = success_count / non_null_count
-
-        if success_rate >= 0.6:           
-            if (converted.dropna() % 1 == 0).all():
-                df[col] = converted.astype("Int64")  # Nullable integer
-            else:
-                df[col] = converted  # Keep as float
-
-    df = df.dropna(subset=[primary_col])
-
-    id_columns = [
-        col for col in df.columns if col == "id" or col.endswith("_id")
-    ]
-    if id_columns:
-        df = df.drop_duplicates(subset=id_columns, keep="last")
-    else:
-        df = df.drop_duplicates(keep="last")
-        
+    # 6. Convert to list of dicts, ensuring pandas NaN is Python None for SQL
     records = df.to_dict(orient="records")
     return [
-        {k: (None if pd.isna(v) else v) for k, v in row.items()}
+        {col: (None if pd.isna(val) else val) for col, val in row.items()}
         for row in records
     ]
-

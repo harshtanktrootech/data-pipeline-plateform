@@ -175,4 +175,45 @@
         </div>
     </div>
 </div>
+
+<!-- ── Pipeline Health (Photo 4) ── -->
+<div class="card shadow-sm border-0 rounded-3 mt-4">
+    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">
+            <i class="bi bi-heart-pulse-fill text-danger me-2"></i>Pipeline Health
+        </h5>
+        <span class="badge bg-light text-muted border">Platform Status</span>
+    </div>
+    <div class="card-body pt-0 pb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-success text-uppercase small fw-bold">Active Pipelines</div>
+                        <h4 class="fw-bold mb-0 text-success">{{ active_pipelines }}</h4>
+                    </div>
+                    <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-danger-subtle border border-danger-subtle rounded-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-danger text-uppercase small fw-bold">Failing Pipelines</div>
+                        <h4 class="fw-bold mb-0 text-danger">{{ failing_pipelines }}</h4>
+                    </div>
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-3"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-secondary-subtle border border-secondary-subtle rounded-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-secondary text-uppercase small fw-bold">Disabled / Inactive</div>
+                        <h4 class="fw-bold mb-0 text-secondary">{{ disabled_pipelines }}</h4>
+                    </div>
+                    <i class="bi bi-slash-circle-fill text-secondary fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

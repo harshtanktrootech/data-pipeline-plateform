@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Execution History | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+<!-- Auto-refresh every 5s if a pipeline is actively running -->
+{% if has_running %}
+<meta http-equiv="refresh" content="5">
+{% endif %}
+
+<!-- Header & Filters (Matching Photo 8 & Documentation Section 3) -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h4 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+        <i class="bi bi-clock-history text-primary"></i> Execution History
+      </h4>
+      <small class="text-muted fst-italic">
+        "What happened when my pipelines ran?"
+      </small>
+    </div>
+
+    <!-- Filter Buttons & Controls -->
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <!-- Status Filters -->
+      <a href="{% url 'execution-history-page' %}{% if pipeline_id %}?pipeline={{ pipeline_id }}{% endif %}"
+         class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill px-3">
+        All
+      </a>
+      <a href="{% url 'execution-history-page' %}?status=SUCCESS{% if pipeline_id %}&pipeline={{ pipeline_id }}{% endif %}"
+         class="btn btn-sm {% if status_filter == 'SUCCESS' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill px-3">
+        <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
+      </a>
+      <a href="{% url 'execution-history-page' %}?status=FAILED{% if pipeline_id %}&pipeline={{ pipeline_id }}{% endif %}"
+         class="btn btn-sm {% if status_filter == 'FAILED' %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill px-3">
+        <i class="bi bi-x-circle-fill me-1"></i> FAILED
+      </a>
+      <a href="{% url 'execution-history-page' %}?status=RUNNING{% if pipeline_id %}&pipeline={{ pipeline_id }}{% endif %}"
+         class="btn btn-sm {% if status_filter == 'RUNNING' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-3">
+        <i class="bi bi-arrow-repeat me-1"></i> RUNNING
+      </a>
+    </div>
+  </div>
+
+  <!-- 📋 Execution History Table: Pipeline, Status, Started, Duration, Triggered By -->
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light border-bottom">
+          <tr>
+            <th class="ps-4 py-3" style="width: 28%;">Pipeline</th>
+            <th class="py-3" style="width: 18%;">Triggered By</th>
+            <th class="py-3" style="width: 20%;">Status</th>
+            <th class="py-3" style="width: 18%;">Started</th>
+            <th class="pe-4 py-3" style="width: 16%;">Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exec in executions %}
+          <tr>
+            <!-- 1. Pipeline -->
+            <td class="ps-4 py-3">
+              <a href="{% url 'pipeline-detail-page' exec.pipeline.id %}" class="fw-bold text-decoration-none text-dark fs-6">
+                {{ exec.pipeline.name }}
+              </a>
+            </td>
+
+            <!-- 2. Triggered By (Directly behind Pipeline) -->
+            <td class="py-3">
+              {% if exec.is_manual %}
+              <span class="badge bg-light text-dark border">
+                <i class="bi bi-person me-1 text-secondary"></i>{{ exec.trigger_label }}
+              </span>
+              {% else %}
+              <span class="badge bg-info-subtle text-info border border-info">
+                <i class="bi bi-cpu me-1"></i>Celery Cron
+              </span>
+              {% endif %}
+            </td>
+
+            <!-- 3. Status -->
+            <td class="py-3">
+              {% if exec.status == "SUCCESS" %}
+              <span class="badge bg-success-subtle text-success border border-success px-3 py-1 rounded-pill fw-bold">
+                <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
+              </span>
+              {% elif exec.status == "FAILED" %}
+              <div class="d-inline-flex flex-column align-items-start">
+                <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-1 rounded-pill fw-bold">
+                  <i class="bi bi-x-circle-fill me-1"></i> FAILED
+                </span>
+                {% if exec.error_message %}
+                <button type="button" class="btn btn-link btn-sm p-0 text-danger text-decoration-none small mt-1 font-monospace"
+                        data-bs-toggle="modal" data-bs-target="#errorModal{{ exec.id }}" style="font-size: 0.75rem;">
+                  <i class="bi bi-info-circle me-1"></i> {{ exec.error_message|truncatechars:35 }}
+                </button>
+                {% endif %}
+              </div>
+              {% else %}
+              <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-1 rounded-pill fw-bold">
+                <i class="bi bi-arrow-repeat me-1 spinner-border spinner-border-sm" role="status" style="width: 0.75rem; height: 0.75rem;"></i> RUNNING
+              </span>
+              {% endif %}
+            </td>
+
+            <!-- 4. Started -->
+            <td class="py-3 text-dark font-monospace fw-semibold">
+              {{ exec.started_at|date:"h:i A" }}
+              <span class="text-muted small fw-normal ms-1">({{ exec.started_at|date:"M d" }})</span>
+            </td>
+
+            <!-- 5. Duration -->
+            <td class="pe-4 py-3">
+              {% if exec.status == "RUNNING" %}
+              <span class="text-muted fw-semibold font-monospace">--</span>
+              {% else %}
+              <span class="badge bg-light text-dark border px-2 py-1 font-monospace">
+                {{ exec.duration_seconds|floatformat:2 }}s
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+
+          <!-- Error Details Modal (Doc Section 4: Error logs and failure reasons) -->
+          {% if exec.error_message %}
+          <div class="modal fade" id="errorModal{{ exec.id }}" tabindex="-1" aria-labelledby="errorModalLabel{{ exec.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom">
+                  <h6 class="modal-title text-danger fw-bold d-flex align-items-center gap-2" id="errorModalLabel{{ exec.id }}">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Failure Details: {{ exec.pipeline.name }} (Run #{{ exec.id }})
+                  </h6>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                  <p class="small text-muted mb-2">Timestamp: <strong>{{ exec.started_at|date:"Y-m-d H:i:s" }}</strong></p>
+                  <p class="small text-muted mb-2">Triggered By: <strong>{{ exec.trigger_label }}</strong></p>
+                  <div class="p-3 bg-light rounded-3 border font-monospace text-danger small">
+                    {{ exec.error_message }}
+                  </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                  <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-2 d-block text-secondary mb-2"></i>
+              No execution history found matching the selected filter.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

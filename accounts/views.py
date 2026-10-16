@@ -178,7 +178,7 @@ def user_role_update_view(request, user_id):
             old_role = old_groups[0] if old_groups else "Viewer"
 
             # Reset previous roles and assign the new role
-            target_user.groups.filter(name__in=["Admin", "Operator", "Viewer"]).delete()
+            target_user.groups.clear()
             group, _ = Group.objects.get_or_create(name=new_role)
             target_user.groups.add(group)
 

@@ -52,15 +52,12 @@
             </a>
           </li>
 
-          {% if is_operator or is_admin %}
+          {% if is_admin %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'audit-log-page' %}">
               <i class="bi bi-shield-lock-fill"></i> Audit Logs
             </a>
           </li>
-          {% endif %}
-
-          {% if is_admin %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'user-management-page' %}">
               <i class="bi bi-people-fill"></i> Users

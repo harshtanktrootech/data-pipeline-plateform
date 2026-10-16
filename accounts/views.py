@@ -4,9 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from accounts.permissions import IsAdmin, IsOperator, IsViewer
 from audit.services import log_action
 
 
@@ -64,7 +61,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            log_action(user, "USER_LOGIN", f"User '{user.username}'", "Logged in via web form", request)
+            log_action(user, "USER_LOGIN", f"User '{user.username}'", "Logged in via web form")
             messages.success(request, f"Welcome back, {user.username}!")
             return redirect("pipeline-list-page")
         else:
@@ -75,28 +72,10 @@ def login_view(request):
 
 def logout_view(request):
     if request.user.is_authenticated:
-        log_action(request.user, "USER_LOGOUT", f"User '{request.user.username}'", "Logged out from web interface", request)
+        log_action(request.user, "USER_LOGOUT", f"User '{request.user.username}'", "Logged out from web interface")
     logout(request)
     messages.info(request, "You have been logged out.")
     return redirect("login-page")
-
-
-# ── DRF Test Views ──
-
-class AdminTestAPIView(APIView):
-    permission_classes = [IsAdmin]
-    def get(self, request):
-        return Response({"message": "Welcome Admin"})
-
-class OperatorTestAPIView(APIView):
-    permission_classes = [IsOperator]
-    def get(self, request):
-        return Response({"message": "Welcome Operator"})
-
-class ViewerTestAPIView(APIView):
-    permission_classes = [IsViewer]
-    def get(self, request):
-        return Response({"message": "Welcome Viewer"})
 
 
 # ── Admin User Management & RBAC Views ──
@@ -153,7 +132,6 @@ def user_management_view(request):
             action="USER_CREATE",
             resource=f"User #{new_user.id} ({new_user.username})",
             details=f"Created with role '{role_name}' by Admin '{request.user.username}'",
-            request=request,
         )
 
         messages.success(request, f"User '{username}' registered successfully with role '{role_name}'!")
@@ -213,7 +191,6 @@ def user_role_update_view(request, user_id):
                 action="USER_ROLE_UPDATE",
                 resource=f"User #{target_user.id} ({target_user.username})",
                 details=f"Role changed from '{old_role}' to '{new_role}' by Admin '{request.user.username}'",
-                request=request,
             )
 
             messages.success(request, f"Role for '{target_user.username}' updated to '{new_role}'.")
@@ -260,7 +237,6 @@ def user_delete_view(request, user_id):
             action="USER_DELETE",
             resource=f"User #{user_id_val} ({username})",
             details=f"User '{username}' (Role: {role}) deleted by Admin '{request.user.username}'",
-            request=request,
         )
 
         messages.success(request, f"User '{username}' has been deleted successfully.")

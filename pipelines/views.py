@@ -1,4 +1,3 @@
-import os
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -11,12 +10,16 @@ from accounts.permissions import CanManagePipeline
 from pipelines.models import Pipeline
 from pipelines.serializers import PipelineSerializer
 from etl.runner import run_pipeline
+from executions.models import PipelineExecution
 from pipelines.forms import PipelineCreateForm
 from pipelines.services import (
     schedule_pipeline_cron,
     get_pipeline_schedule,
     toggle_pipeline_schedule,
     delete_pipeline_cron,
+    calculate_next_run,
+    format_next_run_display,
+    format_last_run_display,
 )
 from audit.services import log_action
 
@@ -39,7 +42,6 @@ class PipelineListCreateAPIView(ListCreateAPIView):
             "PIPELINE_CREATE",
             f"Pipeline '{pipeline.name}' (#{pipeline.id})",
             "Created via REST API",
-            self.request
         )
 
 
@@ -55,9 +57,9 @@ class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
 
 # ── HTML Page Views (Frontend) ──
 
-@login_required(login_url="/admin/login/")
+@login_required(login_url="/login/")
 def pipeline_list_page(request):
-    """Lists all pipelines with RBAC actions and their live schedule status."""
+    """Lists all pipelines with RBAC actions, last run info, and live schedule status."""
     pipelines = list(Pipeline.objects.select_related("created_by").all().order_by("-created_at"))
     
     # 1. Fetch all scheduled periodic tasks from the DB in a single query
@@ -66,10 +68,24 @@ def pipeline_list_page(request):
         for task in PeriodicTask.objects.filter(task="executions.tasks.execute_pipeline_task").select_related("crontab")
     }
 
-    # 2. Attach live schedule object to each pipeline
+    # 2. Fetch the latest execution for each pipeline in a single query
+    latest_executions = {}
+    if pipelines:
+        for execution in PipelineExecution.objects.filter(pipeline__in=pipelines).order_by("started_at"):
+            latest_executions[execution.pipeline_id] = execution
+
+    # 3. Attach live schedule object, next run time, and last run info to each pipeline
     for pipeline in pipelines:
         task_name = f"pipeline_cron_run_{pipeline.id}"
         pipeline.schedule_task = scheduled_tasks.get(task_name)
+        pipeline.next_run_at = calculate_next_run(pipeline.schedule_task)
+        if pipeline.schedule_task and pipeline.schedule_task.enabled and pipeline.status == "active" and pipeline.next_run_at:
+            pipeline.next_run_display = format_next_run_display(pipeline.next_run_at)
+        else:
+            pipeline.next_run_display = "--"
+
+        pipeline.last_execution = latest_executions.get(pipeline.id)
+        pipeline.last_run_display = format_last_run_display(pipeline.last_execution)
 
     return render(request, "pipelines/pipeline_list.html", {"pipelines": pipelines})
 
@@ -95,10 +111,14 @@ def pipeline_detail_page(request, pk):
             total_db_rows = 0
 
     # 2. Fetch the 10 most recent execution runs for this pipeline
-    executions = pipeline.executions.select_related("triggered_by").all()[:10]
+    executions = list(pipeline.executions.select_related("triggered_by").all()[:10])
+    last_execution = executions[0] if executions else None
+    last_run_display = format_last_run_display(last_execution)
 
     # 3. Fetch current cron schedule for this pipeline
     schedule_task = get_pipeline_schedule(pipeline.id)
+    next_run_at = calculate_next_run(schedule_task)
+    next_run_display = format_next_run_display(next_run_at) if (schedule_task and schedule_task.enabled and pipeline.status == "active") else "--"
     
     return render(
         request,
@@ -109,7 +129,11 @@ def pipeline_detail_page(request, pk):
             "preview_rows": preview_rows,
             "total_db_rows": total_db_rows,
             "executions": executions,
+            "last_execution": last_execution,
+            "last_run_display": last_run_display,
             "schedule_task": schedule_task,
+            "next_run_at": next_run_at,
+            "next_run_display": next_run_display,
         },
     )
 
@@ -169,6 +193,7 @@ def schedule_pipeline_view(request, pk):
                 "every_1_min": {"minute": "*", "hour": "*"},
                 "every_5_mins": {"minute": "*/5", "hour": "*"},
                 "every_hour": {"minute": "0", "hour": "*"},
+                "daily_10am": {"minute": "0", "hour": "10"},
                 "daily_midnight": {"minute": "0", "hour": "0"},
                 "weekly_monday": {"minute": "0", "hour": "9", "day_of_week": "mon"},
             }
@@ -180,7 +205,6 @@ def schedule_pipeline_view(request, pk):
                     "SCHEDULE_UPDATE",
                     f"Pipeline '{pipeline.name}' (#{pipeline.id})",
                     f"Cron frequency set to: '{frequency}'",
-                    request
                 )
                 messages.success(request, f"Cron schedule updated successfully for '{pipeline.name}'!")
             else:
@@ -197,7 +221,6 @@ def schedule_pipeline_view(request, pk):
                     "SCHEDULE_TOGGLE",
                     f"Pipeline '{pipeline.name}' (#{pipeline.id})",
                     f"Schedule state changed to: {status_text}",
-                    request
                 )
                 messages.success(request, f"Schedule for '{pipeline.name}' is now {status_text}.")
 
@@ -208,7 +231,6 @@ def schedule_pipeline_view(request, pk):
                 "SCHEDULE_DELETE",
                 f"Pipeline '{pipeline.name}' (#{pipeline.id})",
                 "Removed cron schedule",
-                request
             )
             messages.info(request, f"Schedule removed for '{pipeline.name}'.")
 
@@ -240,7 +262,6 @@ def pipeline_create_page(request):
                 "PIPELINE_CREATE",
                 f"Pipeline '{pipeline.name}' (#{pipeline.pk})",
                 f"Source: {pipeline.source}, Table: {pipeline.table_name}",
-                request
             )
 
             messages.success(request, f"Pipeline '{pipeline.name}' created successfully! You can now review and execute it.")
@@ -293,7 +314,6 @@ def pipeline_edit_page(request, pk):
                 "PIPELINE_UPDATE",
                 f"Pipeline '{updated_pipeline.name}' (#{updated_pipeline.id})",
                 change_summary,
-                request
             )
 
             messages.success(request, f"Pipeline '{updated_pipeline.name}' updated successfully!")
@@ -339,7 +359,6 @@ def pipeline_delete_page(request, pk):
             "PIPELINE_DELETE",
             f"Pipeline '{pipeline_name}' (#{pipeline_id})",
             "Deleted pipeline and associated cron schedules",
-            request
         )
 
         messages.success(request, f"Pipeline '{pipeline_name}' has been deleted successfully.")
@@ -371,7 +390,6 @@ def pipeline_toggle_status_page(request, pk):
             "PIPELINE_STATUS_CHANGE",
             f"Pipeline '{pipeline.name}' (#{pipeline.id})",
             f"Status changed from '{old_status.upper()}' to '{new_status.upper()}'",
-            request,
         )
 
         status_label = "Activated" if new_status == "active" else "Deactivated"
@@ -383,5 +401,7 @@ def pipeline_toggle_status_page(request, pk):
         return redirect("pipeline-detail-page", pk=pk)
 
     return redirect("pipeline-detail-page", pk=pk)
+
+
 
 

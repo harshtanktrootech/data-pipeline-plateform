@@ -59,3 +59,7 @@ class PipelineExecution(models.Model):
     def is_manual(self):
         return self.triggered_by is not None
 
+    @property
+    def duration_display(self):
+        return f"{self.duration_seconds:.2f}s"
+

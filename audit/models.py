@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-class   AuditLog(models.Model):
+class AuditLog(models.Model):
     ACTION_CHOICES = [
         ("USER_LOGIN", "User Login"),
         ("USER_LOGOUT", "User Logout"),

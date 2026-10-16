@@ -28,29 +28,6 @@ class IsViewer(BasePermission):
         )
 
 
-class IsAdminOrOperator(BasePermission):
-
-    def has_permission(self, request, view):
-        return(
-            request.user.is_authenticated
-            and request.user.groups.filter(
-                name__in=["Admin", "Operator"]
-            ).exists()
-        )
-
-
-
-class IsPipelineOwnerOrAdmin(BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-
-        if request.user.groups.filter(name="Admin").exists():
-            return True
-
-        return obj.created_by == request.user
-
-
-
 class CanManagePipeline(BasePermission):
 
     def has_permission(self, request, view):        # Is user Admin or Operator?

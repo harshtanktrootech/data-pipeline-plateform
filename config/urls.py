@@ -50,5 +50,6 @@ urlpatterns = [
     path("pipelines/<int:pk>/", pipeline_detail_page, name="pipeline-detail-page"),
     path("pipelines/<int:pk>/run/", run_pipeline_page_view, name="pipeline-run-page"),
     path("pipelines/<int:pk>/schedule/", schedule_pipeline_view, name="pipeline-schedule"),
+    path("executions/", include("executions.urls")),
     path("audit/", audit_log_list_page, name="audit-log-page"),
 ]

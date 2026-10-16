@@ -4,258 +4,207 @@
 
 {% block content %}
 
-<!-- Top Navigation & Action Buttons -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <a href="{% url 'pipeline-list-page' %}" class="btn btn-outline-secondary rounded-pill px-3">
+<!-- Top Back Link -->
+<div class="mb-3">
+  <a href="{% url 'pipeline-list-page' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm">
     <i class="bi bi-arrow-left me-1"></i> Back to Pipelines
   </a>
-
-  <div class="d-flex align-items-center gap-2">
-    <!-- Admin only: Edit & Delete Pipeline Buttons -->
-    {% if is_admin %}
-    <a href="{% url 'pipeline-edit-page' pipeline.id %}" class="btn btn-outline-warning rounded-pill px-3 shadow-sm">
-      <i class="bi bi-pencil-square me-1"></i> Edit Pipeline
-    </a>
-    <button type="button" class="btn btn-outline-danger rounded-pill px-3 shadow-sm" data-bs-toggle="modal"
-      data-bs-target="#deletePipelineModal">
-      <i class="bi bi-trash3-fill me-1"></i> Delete Pipeline
-    </button>
-    {% endif %}
-
-    <!-- Admin & Operator: Run Pipeline Button -->
-    {% if is_operator %}
-    {% if pipeline.status == "active" %}
-    <form action="{% url 'pipeline-run-page' pipeline.id %}" method="POST" class="d-inline">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-success shadow-sm rounded-pill px-4">
-        <i class="bi bi-play-fill me-1"></i> Run Pipeline Now
-      </button>
-    </form>
-    {% else %}
-    <button class="btn btn-secondary rounded-pill px-4 shadow-sm" disabled
-      title="Cannot run: Pipeline is inactive. An Admin must activate it first.">
-      <i class="bi bi-slash-circle me-1"></i> Pipeline Inactive
-    </button>
-    {% endif %}
-    {% else %}
-    <button class="btn btn-secondary rounded-pill px-3" disabled title="Viewer role cannot execute pipelines">
-      <i class="bi bi-lock-fill me-1"></i> Read Only (Viewer)
-    </button>
-    {% endif %}
-  </div>
-
 </div>
 
-<!-- Pipeline Metadata Overview Card -->
+<!-- 📋 Pipeline Details Card (Laptop Table Layout matching Photo 6) -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
-  <div class="card-header bg-dark text-white py-3 px-4 rounded-top-4">
-    <div class="d-flex justify-content-between align-items-center">
-      <h5 class="mb-0 d-flex align-items-center gap-2">
+  <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h4 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
         <i class="bi bi-diagram-3-fill text-primary"></i> {{ pipeline.name }}
-      </h5>
-      {% if is_admin %}
-      <!-- Admin: Click badge to toggle Active / Inactive status -->
-      <form action="{% url 'pipeline-toggle-status' pipeline.id %}" method="POST" class="d-inline m-0">
-        {% csrf_token %}
-        {% if pipeline.status == "active" %}
-        <button type="submit"
-          class="btn btn-sm badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-1"
-          title="Admin: Click to Deactivate this pipeline"
-          style="font-size: 0.85rem; cursor: pointer; text-decoration: none;">
-          <i class="bi bi-check-circle-fill"></i>
-          <span class="fw-semibold">Active</span>
-          <i class="bi bi-arrow-repeat ms-1 opacity-75 small"></i>
-        </button>
-        {% else %}
-        <button type="submit"
-          class="btn btn-sm badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 rounded-pill shadow-sm d-inline-flex align-items-center gap-1"
-          title="Admin: Click to Activate this pipeline"
-          style="font-size: 0.85rem; cursor: pointer; text-decoration: none;">
-          <i class="bi bi-pause-circle-fill"></i>
-          <span class="fw-semibold">Inactive</span>
-          <i class="bi bi-arrow-repeat ms-1 opacity-75 small"></i>
-        </button>
-        {% endif %}
-      </form>
-      {% else %}
+      </h4>
+    </div>
+
+    <!-- Status & Action Button Alignment -->
+    <div class="d-flex align-items-center gap-3">
+      <!-- Status Badge -->
       {% if pipeline.status == "active" %}
-      <span class="badge bg-success-subtle text-success border border-success px-3 py-1">
-        <i class="bi bi-check-circle-fill me-1"></i> Active
+      <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill fw-bold">
+        <i class="bi bi-check-circle-fill me-1"></i> ACTIVE
       </span>
       {% else %}
-      <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-1">
-        <i class="bi bi-pause-circle-fill me-1"></i> Inactive
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 rounded-pill fw-bold">
+        <i class="bi bi-pause-circle-fill me-1"></i> INACTIVE
       </span>
       {% endif %}
-      {% endif %}
-    </div>
-  </div>
 
-  <div class="card-body p-4">
-    <div class="row g-3">
-      <div class="col-md-3 col-sm-6">
-        <small class="text-muted text-uppercase fw-semibold d-block">Source File</small>
-        <code class="text-dark fs-6">{{ pipeline.source }}</code>
-      </div>
-      <div class="col-md-3 col-sm-6">
-        <small class="text-muted text-uppercase fw-semibold d-block">Target DB Table</small>
-        <code class="text-primary fs-6">{{ pipeline.table_name }}</code>
-      </div>
-      <div class="col-md-3 col-sm-6">
-        <small class="text-muted text-uppercase fw-semibold d-block">Total DB Rows</small>
-        <span class="fw-bold fs-6 text-success">{{ total_db_rows }} records</span>
-      </div>
-      <div class="col-md-3 col-sm-6">
-        <small class="text-muted text-uppercase fw-semibold d-block">Created By</small>
-        <span class="fw-semibold">{{ pipeline.created_by.username }}</span>
-      </div>
-      {% if pipeline.description %}
-      <div class="col-12 mt-2">
-        <small class="text-muted text-uppercase fw-semibold d-block">Description</small>
-        <p class="mb-0 text-secondary">{{ pipeline.description }}</p>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-<!-- ⏰ Automated Cron Schedule Card -->
-<div class="card border-0 shadow-sm rounded-4 mb-4">
-  <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-    <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-      <i class="bi bi-clock-history text-primary"></i> Automated Cron Schedule
-    </h6>
-    {% if schedule_task %}
-    {% if schedule_task.enabled %}
-    <span class="badge bg-success px-3 py-1"><i class="bi bi-check-circle me-1"></i> Active</span>
-    {% else %}
-    <span class="badge bg-warning text-dark px-3 py-1"><i class="bi bi-pause-circle me-1"></i> Paused</span>
-    {% endif %}
-    {% else %}
-    <span class="badge bg-secondary px-3 py-1"><i class="bi bi-slash-circle me-1"></i> Manual Only</span>
-    {% endif %}
-  </div>
-
-  <div class="card-body p-4">
-    {% if pipeline.status != "active" %}
-    <div
-      class="alert alert-warning border-0 bg-warning-subtle text-warning-emphasis d-flex align-items-center gap-2 mb-3 py-2 px-3 rounded-3 small">
-      <i class="bi bi-exclamation-triangle-fill fs-6"></i>
-      <div>
-        <strong>Pipeline is Inactive:</strong> Automated background runs are skipped by Celery until the pipeline is set
-        to Active.
-      </div>
-    </div>
-    {% endif %}
-    <div class="row align-items-center g-3">
-      <div class="col-md-6">
-        {% if schedule_task %}
-        <p class="mb-1 text-muted small text-uppercase fw-semibold">Current Schedule Rule:</p>
-        <p class="fs-6 fw-semibold font-monospace mb-1 text-dark">
-          <code>{{ schedule_task.crontab.minute }} {{ schedule_task.crontab.hour }} {{ schedule_task.crontab.day_of_month }} {{ schedule_task.crontab.month_of_year }} {{ schedule_task.crontab.day_of_week }}</code>
-        </p>
-        <span class="badge bg-light text-muted border">Total Runs: {{ schedule_task.total_run_count }}</span>
-        {% if schedule_task.last_run_at %}
-        <span class="badge bg-light text-muted border ms-1">
-          Last Run: {{ schedule_task.last_run_at|date:"Y-m-d H:i" }}
-        </span>
-        {% endif %}
-        {% else %}
-        <p class="text-muted mb-0">This pipeline is currently triggered manually. Choose a frequency below to schedule
-          automated background runs.</p>
-        {% endif %}
-      </div>
-
-      <!-- Schedule Setup & Controls -->
-      <div class="col-md-6">
-        {% if is_operator %}
-        <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST"
-          class="d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
+      <!-- Run Pipeline Button -->
+      {% if is_operator %}
+        {% if pipeline.status == "active" %}
+        <form action="{% url 'pipeline-run-page' pipeline.id %}" method="POST" class="d-inline m-0">
           {% csrf_token %}
-          <input type="hidden" name="action" value="save_schedule">
-          <select name="frequency" class="form-select w-auto" required>
-            <option value="" disabled {% if not schedule_task %}selected{% endif %}>-- Select Frequency --</option>
-            <option value="every_1_min">⚡ Every 1 Minute (Testing)</option>
-            <option value="every_5_mins">⏱️ Every 5 Minutes</option>
-            <option value="every_hour">🕐 Every Hour</option>
-            <option value="daily_midnight">🌙 Daily at Midnight (00:00)</option>
-            <option value="weekly_monday">📅 Weekly on Monday (09:00 AM)</option>
-          </select>
-          <button type="submit" class="btn btn-primary rounded-pill px-3">
-            <i class="bi bi-save me-1"></i> Save
+          <button type="submit" class="btn btn-primary px-3 py-2 rounded-pill shadow-sm d-flex align-items-center gap-1">
+            <i class="bi bi-play-fill fs-6"></i> Run Pipeline
           </button>
         </form>
-
-        {% if schedule_task %}
-        <div class="d-flex gap-2 justify-content-md-end mt-2">
-          <!-- Toggle Pause/Resume -->
-          <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST" class="d-inline">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="toggle">
-            <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3">
-              {% if schedule_task.enabled %}
-              <i class="bi bi-pause-fill me-1"></i> Pause
-              {% else %}
-              <i class="bi bi-play-fill me-1"></i> Resume
-              {% endif %}
-            </button>
-          </form>
-
-          <!-- Delete Schedule -->
-          <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST" class="d-inline">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="delete">
-            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
-              onclick="return confirm('Remove scheduled execution for this pipeline?');">
-              <i class="bi bi-trash me-1"></i> Remove
-            </button>
-          </form>
-        </div>
-        {% endif %}
         {% else %}
-        <div class="d-flex justify-content-md-end align-items-center">
-          <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill">
-            <i class="bi bi-lock-fill me-1"></i> Schedule management requires Operator role
-          </span>
-        </div>
+        <button class="btn btn-secondary px-3 py-2 rounded-pill" disabled title="Pipeline is inactive. Activate it to run.">
+          <i class="bi bi-slash-circle me-1"></i> Pipeline Inactive
+        </button>
         {% endif %}
-      </div>
+      {% else %}
+      <button class="btn btn-secondary px-3 py-2 rounded-pill" disabled title="Viewer role cannot execute pipelines">
+        <i class="bi bi-lock-fill me-1"></i> Read Only
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pipeline Details Proper Table -->
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0 align-middle">
+        <tbody>
+          <tr>
+            <th class="bg-light ps-4 text-muted text-uppercase small" style="width: 18%;">Status</th>
+            <td class="ps-4 fw-bold {% if pipeline.status == 'active' %}text-success{% else %}text-secondary{% endif %}" style="width: 32%;">
+              {{ pipeline.status|upper }}
+            </td>
+            <th class="bg-light ps-4 text-muted text-uppercase small" style="width: 18%;">Created By</th>
+            <td class="ps-4 fw-semibold text-dark" style="width: 32%;">
+              <i class="bi bi-person me-1 text-secondary"></i>{{ pipeline.created_by.username }}
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light ps-4 text-muted text-uppercase small">Created At</th>
+            <td class="ps-4 text-dark">
+              <i class="bi bi-calendar3 me-1 text-secondary"></i>{{ pipeline.created_at|date:"d M Y" }}
+            </td>
+            <th class="bg-light ps-4 text-muted text-uppercase small">Source</th>
+            <td class="ps-4">
+              <code class="text-dark fs-6">{{ pipeline.source|default:"—" }}</code>
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light ps-4 text-muted text-uppercase small">Schedule</th>
+            <td class="ps-4">
+              {% if schedule_task %}
+              <code class="text-primary fs-6 font-monospace">
+                {{ schedule_task.crontab.minute }} {{ schedule_task.crontab.hour }} {{ schedule_task.crontab.day_of_month }} {{ schedule_task.crontab.month_of_year }} {{ schedule_task.crontab.day_of_week }}
+              </code>
+              {% else %}
+              <span class="text-muted">-- (Manual Only)</span>
+              {% endif %}
+            </td>
+            <th class="bg-light ps-4 text-muted text-uppercase small">Schedule Status</th>
+            <td class="ps-4">
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <div>
+                  {% if schedule_task and schedule_task.enabled %}
+                  <span class="badge bg-success px-3 py-1">ENABLED</span>
+                  {% else %}
+                  <span class="badge bg-secondary px-3 py-1">DISABLED</span>
+                  {% endif %}
+                </div>
+                {% if is_operator %}
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                  <i class="bi bi-gear-fill me-1"></i> Configure
+                </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <th class="bg-light ps-4 text-muted text-uppercase small">Last Run</th>
+            <td class="ps-4">
+              {% if last_execution and last_run_display != "--" %}
+              <div class="d-flex align-items-center gap-2">
+                <span class="fw-semibold text-dark">{{ last_run_display }}</span>
+                {% if last_execution.status == 'SUCCESS' %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0 rounded-pill" style="font-size: 0.72rem;">SUCCESS</span>
+                {% elif last_execution.status == 'FAILED' %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-0 rounded-pill" style="font-size: 0.72rem;">FAILED</span>
+                {% elif last_execution.status == 'RUNNING' %}
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-0 rounded-pill" style="font-size: 0.72rem;">RUNNING</span>
+                {% endif %}
+                <span class="text-muted small">({{ last_execution.duration_seconds|default:"0.00"|floatformat:2 }}s)</span>
+              </div>
+              {% else %}
+              <span class="text-muted">-- (Never executed)</span>
+              {% endif %}
+            </td>
+            <th class="bg-light ps-4 text-muted text-uppercase small">Next Run</th>
+            <td class="ps-4">
+              {% if schedule_task and schedule_task.enabled and pipeline.status == "active" and next_run_display != "--" %}
+              <span class="fw-bold text-dark">{{ next_run_display }}</span>
+              {% else %}
+              <span class="text-muted">--</span>
+              {% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- 📊 Live DB Table Data Preview -->
+<!-- 📜 Recent Executions Table (Matching Photo 6) -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
   <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-    <h6 class="mb-0 fw-bold d-flex align-items-center gap-2 text-dark">
-      <i class="bi bi-table text-primary"></i> Live Database Preview (Top 5 Records)
-    </h6>
-    <span class="badge bg-light text-muted border">Table: {{ pipeline.table_name }}</span>
+    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+      <i class="bi bi-clock-history text-primary"></i> Recent Executions
+    </h5>
+    <a href="{% url 'execution-history-page' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+      View All History &rarr;
+    </a>
   </div>
+
   <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-striped table-hover align-middle mb-0">
+      <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
-            {% for header in preview_headers %}
-            <th class="ps-3">{{ header }}</th>
-            {% empty %}
-            <th class="ps-3">Table Structure</th>
-            {% endfor %}
+            <th class="ps-4">Status</th>
+            <th>Started At</th>
+            <th>Duration</th>
+            <th class="pe-4 text-end">Triggered By</th>
           </tr>
         </thead>
         <tbody>
-          {% for row in preview_rows %}
+          {% for exec in executions %}
           <tr>
-            {% for cell in row %}
-            <td class="ps-3 font-monospace small">{{ cell }}</td>
-            {% endfor %}
+            <td class="ps-4">
+              {% if exec.status == "SUCCESS" %}
+              <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
+              </span>
+              {% elif exec.status == "FAILED" %}
+              <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-x-circle-fill me-1"></i> FAILED
+              </span>
+              {% else %}
+              <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill fw-bold">
+                {{ exec.status }}
+              </span>
+              {% endif %}
+            </td>
+            <td class="text-dark font-monospace fw-semibold">
+              {{ exec.started_at|date:"h:i A" }}
+              <span class="text-muted small fw-normal ms-1">({{ exec.started_at|date:"M d, Y" }})</span>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border px-2 py-1 font-monospace">
+                {{ exec.duration_seconds|floatformat:2 }}s
+              </span>
+            </td>
+            <td class="pe-4 text-end text-muted small">
+              {% if exec.is_manual %}
+              <i class="bi bi-person me-1"></i>{{ exec.trigger_label }}
+              {% else %}
+              <i class="bi bi-cpu me-1"></i>Celery Cron
+              {% endif %}
+            </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="10" class="text-center text-muted py-4">
-              <i class="bi bi-inbox fs-2 d-block text-secondary mb-1"></i>
-              No data loaded yet. Run the pipeline to populate records.
+            <td colspan="4" class="text-center py-4 text-muted">
+              <i class="bi bi-inbox fs-3 d-block text-secondary mb-1"></i>
+              No recent executions found for this pipeline. Click <strong>Run Pipeline</strong> above to start one.
             </td>
           </tr>
           {% endfor %}
@@ -265,115 +214,110 @@
   </div>
 </div>
 
-<!-- 📜 Execution History Table -->
-<div class="card border-0 shadow-sm rounded-4">
-  <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-    <h6 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
-      <i class="bi bi-clock-history text-primary"></i> Execution History (Last 10 Runs)
-    </h6>
-    <span class="badge bg-light text-muted border">Latest Runs</span>
-  </div>
-  <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead class="table-light">
-        <tr>
-          <th class="ps-4">Run #</th>
-          <th>Status</th>
-          <th>Triggered By</th>
-          <th>Extracted</th>
-          <th>Processed</th>
-          <th>Loaded</th>
-          <th>Duration</th>
-          <th class="pe-4">Started At</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for exec in executions %}
-        <tr>
-          <td class="ps-4"><span class="font-monospace fw-bold">#{{ exec.id }}</span></td>
-          <td>
-            {% if exec.status == "SUCCESS" %}
-            <span class="badge bg-success-subtle text-success border border-success">
-              <i class="bi bi-check-circle-fill me-1"></i> Success
-            </span>
-            {% elif exec.status == "FAILED" %}
-            <span class="badge bg-danger-subtle text-danger border border-danger">
-              <i class="bi bi-x-circle-fill me-1"></i> Failed
-            </span>
-            {% if exec.error_message %}
-            <div class="small text-danger mt-1 font-monospace" style="font-size: 0.75rem;"
-              title="{{ exec.error_message }}">
-              {{ exec.error_message|truncatechars:45 }}
-            </div>
-            {% endif %}
-            {% else %}
-            <span class="badge bg-warning-subtle text-warning border border-warning">{{ exec.status }}</span>
-            {% endif %}
-          </td>
-          <td>
-            {% if exec.is_manual %}
-            <span class="badge bg-light text-dark border">
-              <i class="bi bi-person me-1"></i>{{ exec.trigger_label }}
-            </span>
-            {% else %}
-            <span class="badge bg-info-subtle text-info border border-info">
-              <i class="bi bi-cpu me-1"></i>Celery Cron
-            </span>
-            {% endif %}
-          </td>
-          <td><code>{{ exec.records_extracted }}</code></td>
-          <td><code>{{ exec.records_processed }}</code></td>
-          <td><span class="fw-semibold text-success">{{ exec.records_loaded }}</span></td>
-          <td><span class="badge bg-light text-dark border">{{ exec.duration_seconds }}s</span></td>
-          <td class="pe-4 text-muted small">{{ exec.started_at|date:"Y-m-d H:i:s" }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="8" class="text-center py-4 text-muted">
-            <i class="bi bi-activity fs-3 d-block text-secondary mb-1"></i>
-            No execution history found yet for this pipeline.
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Delete Pipeline Confirmation Modal (Admin Only) -->
-{% if is_admin %}
-<div class="modal fade" id="deletePipelineModal" tabindex="-1" aria-labelledby="deletePipelineModalLabel"
-  aria-hidden="true">
+<!-- ⚙️ Configure Schedule Modal (Admin/Operator Only) -->
+{% if is_operator %}
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 border-0 shadow">
-      <div class="modal-header border-bottom-0 pb-0">
-        <h5 class="modal-title text-danger fw-bold d-flex align-items-center gap-2" id="deletePipelineModalLabel">
-          <i class="bi bi-exclamation-triangle-fill"></i> Delete Pipeline
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom py-3 px-4">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="scheduleModalLabel">
+          <i class="bi bi-clock-history text-primary"></i> Configure Pipeline Schedule
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body py-3">
-        <p class="mb-2">Are you sure you want to delete pipeline <strong class="text-dark">{{ pipeline.name }}</strong>?
+
+      <div class="modal-body p-4">
+        <p class="text-muted small mb-3">
+          Configure automated periodic execution for <strong>{{ pipeline.name }}</strong> using Celery Beat.
         </p>
-        <div class="alert alert-danger mb-0 small">
-          <i class="bi bi-info-circle me-1"></i>
-          <strong>Warning:</strong> This will permanently delete the pipeline configuration, all execution logs, and any
-          associated cron schedules. This action cannot be undone.
+
+        <!-- Current Schedule Info -->
+        <div class="bg-light p-3 rounded-3 mb-3 border">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted text-uppercase fw-semibold">Current Status</span>
+            {% if schedule_task and schedule_task.enabled %}
+            <span class="badge bg-success px-2 py-1">ENABLED</span>
+            {% elif schedule_task %}
+            <span class="badge bg-warning text-dark px-2 py-1">PAUSED</span>
+            {% else %}
+            <span class="badge bg-secondary px-2 py-1">NOT SCHEDULED</span>
+            {% endif %}
+          </div>
+          {% if schedule_task %}
+          <div class="small">
+            <span class="text-muted">Cron Rule:</span>
+            <code class="text-primary font-monospace">{{ schedule_task.crontab.minute }} {{ schedule_task.crontab.hour }} {{ schedule_task.crontab.day_of_month }} {{ schedule_task.crontab.month_of_year }} {{ schedule_task.crontab.day_of_week }}</code>
+          </div>
+          {% if next_run_display and next_run_display != "--" %}
+          <div class="small text-muted mt-1">
+            <i class="bi bi-clock text-primary me-1"></i>Next Run: <strong>{{ next_run_display }}</strong>
+          </div>
+          {% endif %}
+          {% endif %}
         </div>
-      </div>
-      <div class="modal-footer border-top-0 pt-0">
-        <button type="button" class="btn btn-outline-secondary rounded-pill px-3"
-          data-bs-dismiss="modal">Cancel</button>
-        <form action="{% url 'pipeline-delete-page' pipeline.id %}" method="POST" class="d-inline">
+
+        <!-- Frequency Form -->
+        <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST" class="mb-3">
           {% csrf_token %}
-          <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
-            <i class="bi bi-trash3-fill me-1"></i> Confirm Delete
-          </button>
+          <input type="hidden" name="action" value="save_schedule">
+          <label class="form-label fw-semibold small text-secondary text-uppercase mb-1">Select Execution Frequency</label>
+          <div class="input-group mb-3">
+            <select name="frequency" class="form-select" required>
+              <option value="" disabled {% if not schedule_task %}selected{% endif %}>-- Select Frequency Preset --</option>
+              <option value="every_1_min" {% if schedule_task and schedule_task.crontab.minute == "*" and schedule_task.crontab.hour == "*" %}selected{% endif %}>⚡ Every 1 Minute (Testing)</option>
+              <option value="every_5_mins" {% if schedule_task and schedule_task.crontab.minute == "*/5" %}selected{% endif %}>⏱️ Every 5 Minutes (*/5 * * * *)</option>
+              <option value="every_hour" {% if schedule_task and schedule_task.crontab.hour == "*" and schedule_task.crontab.minute == "0" %}selected{% endif %}>🕐 Every Hour (0 * * * *)</option>
+              <option value="daily_10am" {% if schedule_task and schedule_task.crontab.hour == "10" and schedule_task.crontab.minute == "0" %}selected{% endif %}>☀️ Every Day at 10:00 AM (0 10 * * *)</option>
+              <option value="daily_midnight" {% if schedule_task and schedule_task.crontab.hour == "0" and schedule_task.crontab.minute == "0" %}selected{% endif %}>🌙 Daily at Midnight (0 0 * * *)</option>
+              <option value="weekly_monday">📅 Weekly on Monday at 9:00 AM</option>
+            </select>
+            <button type="submit" class="btn btn-primary px-3">
+              <i class="bi bi-check-lg me-1"></i> Save
+            </button>
+          </div>
         </form>
+
+        <!-- Toggle Pause / Resume or Delete Controls -->
+        {% if schedule_task %}
+        <div class="border-top pt-3 d-flex justify-content-between align-items-center">
+          <!-- Toggle Pause/Resume -->
+          <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle">
+            <button type="submit" class="btn btn-sm {% if schedule_task.enabled %}btn-outline-warning{% else %}btn-outline-success{% endif %} rounded-pill px-3">
+              {% if schedule_task.enabled %}
+              <i class="bi bi-pause-fill me-1"></i> Pause Schedule
+              {% else %}
+              <i class="bi bi-play-fill me-1"></i> Resume Schedule
+              {% endif %}
+            </button>
+          </form>
+
+          <!-- Delete Schedule -->
+          <form action="{% url 'pipeline-schedule' pipeline.id %}" method="POST" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="return confirm('Remove automated schedule for this pipeline?');">
+              <i class="bi bi-trash me-1"></i> Remove Schedule
+            </button>
+          </form>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
 {% endif %}
+
+<!-- 🔄 Silent minute rollover update to refresh Next Run after execution -->
+<script>
+  (function scheduleMinuteUpdate() {
+    const now = new Date();
+    const msToNextMinute = (60 - now.getSeconds()) * 1000 + 2000;
+    setTimeout(function() {
+      window.location.reload();
+    }, msToNextMinute);
+  })();
+</script>
 
 {% endblock %}

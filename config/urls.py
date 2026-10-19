@@ -22,6 +22,11 @@ from pipelines.views import (
 from audit.views import audit_log_list_page
 from dashboard.views import dashboard_view
 
+from executions.views import (
+    PipelineExecutionListAPIView,
+    PipelineExecutionDetailAPIView,
+)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
 
@@ -38,6 +43,10 @@ urlpatterns = [
     # REST APIs
     path("api/accounts/", include("accounts.urls")),
     path("api/pipelines/", include("pipelines.urls")),
+    path("api/executions/", PipelineExecutionListAPIView.as_view(), name="api-execution-list"),
+    path("api/executions/<int:pk>/", PipelineExecutionDetailAPIView.as_view(), name="api-execution-detail"),
+    path("api/audit/", include("audit.urls")),
+    path("api/dashboard/", include("dashboard.urls")),
 
     # Frontend HTML Routes
     path("", dashboard_view, name="dashboard"),

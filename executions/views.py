@@ -1,8 +1,51 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+
 from executions.models import PipelineExecution
+from executions.serializers import PipelineExecutionSerializer
 from pipelines.models import Pipeline
 
+
+# ── REST API Views ──
+
+class PipelineExecutionListAPIView(generics.ListAPIView):
+    """
+    GET /api/executions/
+    Lists pipeline executions with optional query filters:
+      - ?status=SUCCESS / FAILED / RUNNING
+      - ?pipeline=<pipeline_id>
+    Accessible to all authenticated users (Admin, Operator, Viewer).
+    """
+    serializer_class = PipelineExecutionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = PipelineExecution.objects.select_related("pipeline", "triggered_by").all()
+        
+        status_param = self.request.query_params.get("status")
+        if status_param:
+            queryset = queryset.filter(status=status_param.strip().upper())
+            
+        pipeline_param = self.request.query_params.get("pipeline")
+        if pipeline_param and pipeline_param.isdigit():
+            queryset = queryset.filter(pipeline_id=int(pipeline_param))
+            
+        return queryset
+
+
+class PipelineExecutionDetailAPIView(generics.RetrieveAPIView):
+    """
+    GET /api/executions/<id>/
+    Retrieves full details of a specific execution run.
+    """
+    queryset = PipelineExecution.objects.select_related("pipeline", "triggered_by").all()
+    serializer_class = PipelineExecutionSerializer
+    permission_classes = [IsAuthenticated]
+
+
+# ── Frontend HTML Views ──
 
 @login_required(login_url="/login/")
 def execution_history_page(request):

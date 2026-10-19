@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import connection
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_celery_beat.models import PeriodicTask
 
@@ -53,6 +55,27 @@ class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
         if self.request.method == "GET":
             return [IsAuthenticated()]
         return [CanManagePipeline()]
+
+
+class PipelineRunAPIView(APIView):
+    """
+    POST /api/pipelines/<pk>/run/
+    Executes the ETL pipeline immediately via REST API (Admin and Operator only).
+    """
+    permission_classes = [CanManagePipeline]
+
+    def post(self, request, pk):
+        pipeline = get_object_or_404(Pipeline, pk=pk)
+
+        if pipeline.status != "active":
+            return Response(
+                {"error": f"Cannot execute pipeline '{pipeline.name}': Pipeline is inactive."},
+                status=400,
+            )
+
+        result = run_pipeline(pipeline, triggered_by=request.user)
+        status_code = 200 if result["status"] == "SUCCESS" else 500
+        return Response(result, status=status_code)
 
 
 # ── HTML Page Views (Frontend) ──

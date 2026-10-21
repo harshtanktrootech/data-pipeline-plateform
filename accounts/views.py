@@ -14,44 +14,14 @@ from audit.services import log_action
 # ── HTML Authentication Views ──
 
 def register_view(request):
-    if request.user.is_authenticated:
-        return redirect("pipeline-list-page")
-
-    if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        email = request.POST.get("email", "").strip()
-        role_name = request.POST.get("role", "Viewer")
-        password = request.POST.get("password", "")
-        confirm_password = request.POST.get("confirm_password", "")
-
-        # 1. Validation
-        if not username or not password:
-            messages.error(request, "Username and password are required.")
-            return render(request, "accounts/register.html")
-
-        if password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-            return render(request, "accounts/register.html")
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists. Please pick another.")
-            return render(request, "accounts/register.html")
-
-        # 2. Create User
-        user = User.objects.create_user(username=username, email=email, password=password)
-
-        # 3. Assign Role Group (Admin, Operator, Viewer)
-        group, _ = Group.objects.get_or_create(name=role_name)
-        user.groups.add(group)
-
-        if role_name == "Admin":
-            user.is_staff = True  # Allows admin access
-            user.save()
-
-        messages.success(request, f"Account created successfully as {role_name}! Please log in.")
-        return redirect("login-page")
-
-    return render(request, "accounts/register.html")
+    """
+    Public self-registration is disabled.
+    Only authenticated Admins can register and manage users via the User Management portal (/users/).
+    """
+    if request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name="Admin").exists()):
+        return redirect("user-management-page")
+    messages.info(request, "Public self-registration is disabled. User accounts are created and managed exclusively by Platform Administrators.")
+    return redirect("login-page")
 
 
 def login_view(request):

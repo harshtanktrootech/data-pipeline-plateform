@@ -346,12 +346,12 @@
           <div class="input-group mb-3">
             <select name="frequency" class="form-select" required>
               <option value="" disabled {% if not schedule_task %}selected{% endif %}>-- Select Frequency Preset --</option>
-              <option value="every_1_min" {% if schedule_task and schedule_task.crontab.minute == "*" and schedule_task.crontab.hour == "*" %}selected{% endif %}>⚡ Every 1 Minute (Testing)</option>
-              <option value="every_5_mins" {% if schedule_task and schedule_task.crontab.minute == "*/5" %}selected{% endif %}>⏱️ Every 5 Minutes (*/5 * * * *)</option>
-              <option value="every_hour" {% if schedule_task and schedule_task.crontab.hour == "*" and schedule_task.crontab.minute == "0" %}selected{% endif %}>🕐 Every Hour (0 * * * *)</option>
-              <option value="daily_10am" {% if schedule_task and schedule_task.crontab.hour == "10" and schedule_task.crontab.minute == "0" %}selected{% endif %}>☀️ Every Day at 10:00 AM (0 10 * * *)</option>
-              <option value="daily_midnight" {% if schedule_task and schedule_task.crontab.hour == "0" and schedule_task.crontab.minute == "0" %}selected{% endif %}>🌙 Daily at Midnight (0 0 * * *)</option>
-              <option value="weekly_monday">📅 Weekly on Monday at 9:00 AM</option>
+              <option value="every_1_min" {% if schedule_task and schedule_task.crontab.minute == "*" and schedule_task.crontab.hour == "*" %}selected{% endif %}>Every 1 Minute</option>
+              <option value="every_5_mins" {% if schedule_task and schedule_task.crontab.minute == "*/5" %}selected{% endif %}>Every 5 Minutes (*/5 * * * *)</option>
+              <option value="every_hour" {% if schedule_task and schedule_task.crontab.hour == "*" and schedule_task.crontab.minute == "0" %}selected{% endif %}>Every Hour (0 * * * *)</option>
+              <option value="daily_10am" {% if schedule_task and schedule_task.crontab.hour == "10" and schedule_task.crontab.minute == "0" %}selected{% endif %}>Every Day at 10:00 AM (0 10 * * *)</option>
+              <option value="daily_midnight" {% if schedule_task and schedule_task.crontab.hour == "0" and schedule_task.crontab.minute == "0" %}selected{% endif %}>Every Day at Midnight (0 0 * * *)</option>
+              <option value="weekly_monday">Weekly on Monday at 9:00 AM</option>
             </select>
             <button type="submit" class="btn btn-primary px-3">
               <i class="bi bi-check-lg me-1"></i> Save

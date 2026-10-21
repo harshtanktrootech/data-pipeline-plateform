@@ -1,14 +1,15 @@
 import json
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from pipelines.models import Pipeline
-
+from django.conf import settings
+from django.utils import timezone
+import datetime
 
 
 def schedule_pipeline_cron(pipeline: Pipeline, minute="0", hour="*", day_of_week="*", day_of_month="*", month_of_year="*"):
     """
     Creates or updates a dynamic cron schedule for a specific Pipeline.
     """
-    from django.conf import settings
     tz = getattr(settings, "TIME_ZONE", "Asia/Kolkata")
 
     # 1. Get or create the cron rule in the DB with matching timezone
@@ -66,10 +67,8 @@ def calculate_next_run(periodic_task):
     """
     if not periodic_task or not periodic_task.enabled:
         return None
+    
     try:
-        from django.utils import timezone
-        import datetime
-
         s = periodic_task.schedule
         now = s.now() if hasattr(s, "now") else timezone.now()
         rem_delta = s.remaining_estimate(now)
@@ -89,9 +88,8 @@ def format_next_run_display(next_run_at):
     """
     if not next_run_at:
         return "--"
+    
     try:
-        from django.utils import timezone
-        import datetime
         local_next = timezone.localtime(next_run_at)
         local_today = timezone.localtime(timezone.now()).date()
         if local_next.date() == local_today:
@@ -110,9 +108,8 @@ def format_last_run_display(last_execution):
     """
     if not last_execution or not last_execution.started_at:
         return "--"
+
     try:
-        from django.utils import timezone
-        import datetime
         local_time = timezone.localtime(last_execution.started_at)
         local_today = timezone.localtime(timezone.now()).date()
         if local_time.date() == local_today:

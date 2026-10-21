@@ -118,11 +118,12 @@ def pipeline_detail_page(request, pk):
     """Displays pipeline details, dynamic DB table preview, execution history, and cron schedule."""
     pipeline = get_object_or_404(Pipeline.objects.select_related("created_by"), pk=pk)
     
-    # 1. Fetch live data preview from the dynamic DB table
+    # 1. Fetch live data preview from the dynamic DB table (Admin Only)
+    is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
     preview_headers = []
     preview_rows = []
     total_db_rows = 0
-    if pipeline.table_name:
+    if is_admin and pipeline.table_name:
         try:
             with connection.cursor() as cursor:
                 cursor.execute(f'SELECT count(*) FROM "{pipeline.table_name}";')

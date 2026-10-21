@@ -143,6 +143,88 @@
   </div>
 </div>
 
+{% if is_admin %}
+<!-- 📊 Live Loaded Data Preview Card (PostgreSQL Table - Admin Only) -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+        <i class="bi bi-database-check text-success"></i> Destination Table Live Preview
+        {% if pipeline.table_name %}
+        <code class="text-primary bg-light px-2 py-1 rounded small border font-monospace ms-1">{{ pipeline.table_name }}</code>
+        {% endif %}
+        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill small" style="font-size: 0.72rem;">
+          <i class="bi bi-shield-lock-fill me-1"></i>Admin Only
+        </span>
+      </h5>
+      <small class="text-muted">Direct preview of loaded records from the target PostgreSQL table</small>
+    </div>
+    {% if total_db_rows > 0 %}
+    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+      <i class="bi bi-table me-1"></i> {{ total_db_rows }} Total Records in Database
+    </span>
+    {% elif pipeline.table_name %}
+    <span class="badge bg-secondary-subtle text-secondary border px-3 py-1 rounded-pill">
+      0 Records Loaded
+    </span>
+    {% endif %}
+  </div>
+
+  <div class="card-body p-0">
+    {% if preview_headers and preview_rows %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover table-striped align-middle mb-0 font-monospace" style="font-size: 0.88rem;">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4 text-muted text-uppercase small" style="width: 50px;">#</th>
+            {% for header in preview_headers %}
+            <th class="text-dark small text-uppercase fw-bold">{{ header }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in preview_rows %}
+          <tr>
+            <td class="ps-4 text-muted small">{{ forloop.counter }}</td>
+            {% for cell in row %}
+            <td class="text-dark">{{ cell|default:"<em>null</em>" }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer bg-light py-2 px-4 text-muted small d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-info-circle me-1"></i> Showing first 5 sample rows from PostgreSQL table <code>{{ pipeline.table_name }}</code>.</span>
+      <span class="badge bg-white text-secondary border">PostgreSQL Dynamic Target</span>
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted">
+      <i class="bi bi-database-slash fs-2 d-block text-secondary mb-2"></i>
+      {% if pipeline.table_name %}
+      Destination table <code>{{ pipeline.table_name }}</code> is empty or has not been loaded yet.<br>
+      Click <strong>Run Pipeline</strong> above to extract, transform, and load data into PostgreSQL.
+      {% else %}
+      No destination table specified for this pipeline.
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<!-- 🔒 RBAC Restricted Table Preview Notice for Non-Admins -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
+  <div class="card-body p-4 text-center text-muted">
+    <i class="bi bi-shield-lock text-secondary fs-2 d-block mb-2"></i>
+    <h6 class="fw-bold text-dark mb-1">Destination Table Preview Restricted</h6>
+    <p class="small mb-0">
+      Direct inspection of raw database destination records is restricted to users with the <span class="badge bg-danger text-white"><i class="bi bi-shield-lock-fill me-1"></i>Admin</span> role.
+      Your current role is <strong class="text-dark">{{ user_role }}</strong>.
+    </p>
+  </div>
+</div>
+{% endif %}
+
 <!-- 📜 Recent Executions Table (Matching Photo 6) -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
   <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">

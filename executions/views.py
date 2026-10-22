@@ -7,8 +7,10 @@ from executions.models import PipelineExecution
 from executions.serializers import PipelineExecutionSerializer
 from pipelines.models import Pipeline
 
+from datetime import datetime
+from django.contrib.auth.models import User
 
-# ── REST API Views ──
+# ── REST API Views ──l
 
 class PipelineExecutionListAPIView(generics.ListAPIView):
     """
@@ -49,36 +51,57 @@ class PipelineExecutionDetailAPIView(generics.RetrieveAPIView):
 
 @login_required(login_url="/login/")
 def execution_history_page(request):
-    """
-    Dedicated Execution History page answering: 'What happened when my pipelines ran?'
-    Displays execution status, duration, start timestamp, record counts, and errors.
-    """
-    status_filter = request.GET.get("status", "").strip().upper()
-    pipeline_id = request.GET.get("pipeline", "").strip()
 
     executions = PipelineExecution.objects.select_related("pipeline", "triggered_by").all()
-
+    
+    # 1. Status Filter (SUCCESS, FAILED, RUNNING)
+    status_filter = request.GET.get("status", "").strip().upper()
     if status_filter in ["SUCCESS", "FAILED", "RUNNING"]:
         executions = executions.filter(status=status_filter)
-    else:
-        status_filter = ""
-
+    
+    # 2. Pipeline Filter
+    pipeline_id = request.GET.get("pipeline", "").strip()
     if pipeline_id.isdigit():
         executions = executions.filter(pipeline_id=int(pipeline_id))
-    else:
-        pipeline_id = ""
-
-    has_running = PipelineExecution.objects.filter(status="RUNNING").exists()
-
-    return render(
-        request,
-        "executions/execution_list.html",
-        {
-            "executions": executions[:100],
-            "status_filter": status_filter,
-            "pipeline_id": pipeline_id,
-            "pipelines": Pipeline.objects.all(),
-            "total_runs": executions.count(),
-            "has_running": has_running,
-        },
-    )
+    
+    # 3. User Filter (Specific user OR System/Celery Cron)
+    user_id = request.GET.get("user", "").strip()
+    
+    if user_id == "system":
+        executions = executions.filter(triggered_by__isnull=True)
+    
+    elif user_id.isdigit():
+        executions = executions.filter(triggered_by_id=int(user_id))
+    
+    # 4. Date-wise Filter (e.g., 2026-10-20 to 2026-10-22)
+    start_date = request.GET.get("start_date", "").strip()
+    end_date = request.GET.get("end_date", "").strip()
+    
+    if start_date:
+        executions = executions.filter(started_at__date__gte=start_date)
+    if end_date:
+        executions = executions.filter(started_at__date__lte=end_date)
+    
+    # 5. Time-wise Filter (e.g., 09:00 to 11:00 regardless of date, or within dates)
+    start_time = request.GET.get("start_time", "").strip()  # Format: "09:00"
+    end_time = request.GET.get("end_time", "").strip()      # Format: "11:00"
+    
+    if start_time:
+        executions = executions.filter(started_at__time__gte=start_time)
+    if end_time:
+        executions = executions.filter(started_at__time__lte=end_time)
+    
+    return render(request, "executions/execution_list.html", {
+        "executions": executions[:100],
+        "pipelines": Pipeline.objects.all(),
+        "users": User.objects.all(),
+        "filters": {
+            "status": status_filter,
+            "pipeline": pipeline_id,
+            "user": user_id,
+            "start_date": start_date,
+            "end_date": end_date,
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+    })

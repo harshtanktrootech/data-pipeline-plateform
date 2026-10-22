@@ -11,14 +11,7 @@ from dashboard.serializers import DashboardStatsSerializer
 
 
 def get_dashboard_stats():
-    """
-    Computes high-level platform metrics and pipeline health:
-    - Total pipelines
-    - Successful, failed, and currently running executions
-    - Average execution duration
-    - Pipeline health status (Active, Failing, Disabled)
-    - 10 most recent execution activities
-    """
+
     total_pipelines = Pipeline.objects.count()
 
     exec_stats = PipelineExecution.objects.aggregate(
@@ -59,11 +52,7 @@ def get_dashboard_stats():
 # ── REST API View ──
 
 class DashboardStatsAPIView(APIView):
-    """
-    GET /api/dashboard/stats/
-    Returns platform-wide KPI metrics and recent execution activities in JSON format.
-    Accessible to all authenticated users.
-    """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

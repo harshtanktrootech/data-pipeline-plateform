@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import connection
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
@@ -83,7 +84,29 @@ class PipelineRunAPIView(APIView):
 @login_required(login_url="/login/")
 def pipeline_list_page(request):
     """Lists all pipelines with RBAC actions, last run info, and live schedule status."""
-    pipelines = list(Pipeline.objects.select_related("created_by").all().order_by("-created_at"))
+    queryset = Pipeline.objects.select_related("created_by").all().order_by("-created_at")
+
+    # 1. Status Filter (active / inactive)
+    status_filter = request.GET.get("status", "").strip().lower()
+    if status_filter in ["active", "inactive"]:
+        queryset = queryset.filter(status=status_filter)
+    else:
+        status_filter = ""
+
+    # 2. User Filter (Created By)
+    user_id = request.GET.get("user", "").strip()
+    if user_id.isdigit():
+        queryset = queryset.filter(created_by_id=int(user_id))
+    else:
+        user_id = ""
+
+    # 3. Date Filter (Specific Created Date)
+    date_filter = request.GET.get("date", "").strip()
+    if date_filter:
+        queryset = queryset.filter(created_at__date=date_filter)
+
+    pipelines = list(queryset)
+    total_pipelines = len(pipelines)
     
     # 1. Fetch all scheduled periodic tasks from the DB in a single query
     scheduled_tasks = {
@@ -110,7 +133,20 @@ def pipeline_list_page(request):
         pipeline.last_execution = latest_executions.get(pipeline.id)
         pipeline.last_run_display = format_last_run_display(pipeline.last_execution)
 
-    return render(request, "pipelines/pipeline_list.html", {"pipelines": pipelines})
+    return render(
+        request,
+        "pipelines/pipeline_list.html",
+        {
+            "pipelines": pipelines,
+            "users": User.objects.all(),
+            "total_pipelines": total_pipelines,
+            "filters": {
+                "status": status_filter,
+                "user": user_id,
+                "date": date_filter,
+            },
+        },
+    )
 
 
 @login_required(login_url="/login/")

@@ -4,24 +4,79 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold mb-1"><i class="bi bi-shield-lock-fill text-primary me-2"></i>System Audit Logs</h2>
-        <p class="text-muted mb-0">
-            Security and administrative audit trail of all platform actions.
-        </p>
-    </div>
-    <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2">
-        <i class="bi bi-shield-fill-check me-1"></i> Admin Privilege Required
-    </span>
-</div>
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-shield-lock-fill text-primary"></i> System Audit Logs
+            </h4>
+            <small class="text-muted fst-italic">
+                "Security and administrative audit trail of all platform actions"
+            </small>
+        </div>
 
-<div class="card border-0 shadow-sm rounded-4">
-    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold text-dark">
-            <i class="bi bi-list-columns-reverse me-1 text-primary"></i> Activity Log History
-        </h6>
-        <span class="badge bg-light text-muted border">Latest 100 Events</span>
+        <!-- Right Side: Filter Toggle Button -->
+        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2 shadow-sm"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#filterCollapse"
+                aria-expanded="{% if filters.user or filters.date %}true{% else %}false{% endif %}"
+                aria-controls="filterCollapse">
+            <i class="bi bi-funnel"></i>
+            <span>Filter</span>
+        </button>
+    </div>
+
+    <!-- 🔍 Expandable Filter Section (User, Date) -->
+    <div class="collapse {% if filters.user or filters.date %}show{% endif %} border-bottom bg-light-subtle" id="filterCollapse">
+        <div class="p-3 px-4">
+            <form method="GET" action="{% url 'audit-log-page' %}" class="row g-3 align-items-end">
+                
+                <!-- 1. User -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="bi bi-person me-1"></i> User
+                    </label>
+                    <select name="user" class="form-select form-select-sm rounded-3">
+                        <option value="">All Users / System</option>
+                        <option value="system" {% if filters.user == "system" %}selected{% endif %}>System</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}" {% if filters.user == u.id|stringformat:"s" %}selected{% endif %}>
+                            {{ u.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- 2. Specific Date -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="bi bi-calendar3 me-1"></i> Date
+                    </label>
+                    <input type="date" name="date" value="{{ filters.date }}" class="form-control form-control-sm rounded-3">
+                </div>
+
+                <!-- Actions Row: Total count, Reset, Apply -->
+                <div class="col-12 d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
+                    <div class="small text-muted d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-dark border">Results: <strong>{{ total_logs }}</strong></span>
+                        {% if filters.user or filters.date %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                            <i class="bi bi-check-circle-fill me-1"></i> Filter Active
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'audit-log-page' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                        </a>
+                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 fw-semibold shadow-sm">
+                            <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">

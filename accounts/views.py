@@ -112,6 +112,7 @@ def user_management_view(request):
         return redirect("user-management-page")
 
     # GET Request: Fetch users with groups
+    role_filter = request.GET.get("role", "").strip()
     users = User.objects.all().prefetch_related("groups").order_by("-date_joined")
 
     users_data = []
@@ -124,12 +125,23 @@ def user_management_view(request):
         else:
             role = "Viewer"
 
-        users_data.append({
-            "user": u,
-            "role": role,
-        })
+        # Apply role filter if selected
+        if not role_filter or role == role_filter:
+            users_data.append({
+                "user": u,
+                "role": role,
+            })
 
-    return render(request, "accounts/user_management.html", {"users_data": users_data})
+    return render(
+        request,
+        "accounts/user_management.html",
+        {
+            "users_data": users_data,
+            "filters": {
+                "role": role_filter,
+            },
+        },
+    )
 
 
 @login_required
@@ -147,29 +159,41 @@ def user_role_update_view(request, user_id):
             messages.error(request, "Safety Warning: You cannot demote your own Admin account.")
             return redirect("user-management-page")
 
-        if new_role in ["Admin", "Operator", "Viewer"]:
-            old_groups = list(target_user.groups.values_list("name", flat=True))
-            old_role = old_groups[0] if old_groups else "Viewer"
-
-            # Reset previous roles and assign the new role
-            target_user.groups.clear()
-            group, _ = Group.objects.get_or_create(name=new_role)
-            target_user.groups.add(group)
-
-            target_user.is_staff = (new_role == "Admin")
-            target_user.save()
-
-            # Log Audit Action
-            log_action(
-                user=request.user,
-                action="USER_ROLE_UPDATE",
-                resource=f"User #{target_user.id} ({target_user.username})",
-                details=f"Role changed from '{old_role}' to '{new_role}' by Admin '{request.user.username}'",
-            )
-
-            messages.success(request, f"Role for '{target_user.username}' updated to '{new_role}'.")
-        else:
+        if new_role not in ["Admin", "Operator", "Viewer"]:
             messages.error(request, "Invalid role selected.")
+            return redirect("user-management-page")
+
+        # Determine current role
+        old_groups = list(target_user.groups.values_list("name", flat=True))
+        if target_user.is_superuser or "Admin" in old_groups:
+            current_role = "Admin"
+        elif "Operator" in old_groups:
+            current_role = "Operator"
+        else:
+            current_role = "Viewer"
+
+        # Check if the role actually changed
+        if new_role == current_role:
+            messages.info(request, f"No change made: User '{target_user.username}' is already assigned the '{current_role}' role.")
+            return redirect("user-management-page")
+
+        # Reset previous roles and assign the new role
+        target_user.groups.clear()
+        group, _ = Group.objects.get_or_create(name=new_role)
+        target_user.groups.add(group)
+
+        target_user.is_staff = (new_role == "Admin")
+        target_user.save()
+
+        # Log Audit Action ONLY when the role actually changes
+        log_action(
+            user=request.user,
+            action="USER_ROLE_UPDATE",
+            resource=f"User #{target_user.id} ({target_user.username})",
+            details=f"Role changed from '{current_role}' to '{new_role}' by Admin '{request.user.username}'",
+        )
+
+        messages.success(request, f"Role for '{target_user.username}' updated from '{current_role}' to '{new_role}'.")
 
     return redirect("user-management-page")
 
@@ -196,7 +220,7 @@ def user_delete_view(request, user_id):
         username = target_user.username
         user_id_val = target_user.id
         role = "Admin" if target_user.is_staff or target_user.groups.filter(name="Admin").exists() else (
-            "Operator" if target_user.groups.filter(name="Operator").exists() else "Viewer"
+       "Operator" if target_user.groups.filter(name="Operator").exists() else "Viewer"
         )
 
         # Reassign any pipelines created by this user to the requesting Admin

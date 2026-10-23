@@ -5,16 +5,97 @@
 {% block content %}
 
 <!-- 📋 Pipelines Card with Integrated [+ Create] Button (Matching Photo 5) -->
-<div class="card border-0 shadow-sm rounded-4">
-  <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-    <h4 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-      <i class="bi bi-stack text-primary"></i> Pipelines
-    </h4>
-    {% if is_admin %}
-    <a href="{% url 'pipeline-create-page' %}" class="btn btn-primary px-3 py-2 shadow-sm rounded-pill fw-semibold d-inline-flex align-items-center gap-1">
-      <i class="bi bi-plus-lg"></i>Create
-    </a>
-    {% endif %}
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+  <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <h4 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+        <i class="bi bi-stack text-primary"></i> Pipelines
+      </h4>
+      <small class="text-muted fst-italic">
+        "Manage, monitor, and schedule data pipelines"
+      </small>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <!-- Right Side: Filter Toggle Button -->
+      <button class="btn btn-outline-primary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2 shadow-sm"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#filterCollapse"
+              aria-expanded="{% if filters.status or filters.user or filters.date %}true{% else %}false{% endif %}"
+              aria-controls="filterCollapse">
+        <i class="bi bi-funnel"></i>
+        <span>Filter</span>
+      </button>
+
+      {% if is_admin %}
+      <a href="{% url 'pipeline-create-page' %}" class="btn btn-primary btn-sm px-3 py-2 shadow-sm rounded-pill fw-semibold d-inline-flex align-items-center gap-1">
+        <i class="bi bi-plus-lg"></i> Create
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 🔍 Expandable Filter Section (Status, Created By, Date) -->
+  <div class="collapse {% if filters.status or filters.user or filters.date %}show{% endif %} border-bottom bg-light-subtle" id="filterCollapse">
+    <div class="p-3 px-4">
+      <form method="GET" action="{% url 'pipeline-list-page' %}" class="row g-3 align-items-end">
+        
+        <!-- 1. Status -->
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-bold text-secondary mb-1">
+            <i class="bi bi-activity me-1"></i> Status
+          </label>
+          <select name="status" class="form-select form-select-sm rounded-3">
+            <option value="">All Statuses</option>
+            <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Disabled</option>
+          </select>
+        </div>
+
+        <!-- 2. Created By -->
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-bold text-secondary mb-1">
+            <i class="bi bi-person me-1"></i> Created By
+          </label>
+          <select name="user" class="form-select form-select-sm rounded-3">
+            <option value="">All Users</option>
+            {% for u in users %}
+            <option value="{{ u.id }}" {% if filters.user == u.id|stringformat:"s" %}selected{% endif %}>
+              {{ u.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- 3. Specific Date -->
+        <div class="col-12 col-md-4">
+          <label class="form-label small fw-bold text-secondary mb-1">
+            <i class="bi bi-calendar3 me-1"></i> Created Date
+          </label>
+          <input type="date" name="date" value="{{ filters.date }}" class="form-control form-control-sm rounded-3">
+        </div>
+
+        <!-- Actions Row: Total count, Reset, Apply -->
+        <div class="col-12 d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
+          <div class="small text-muted d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border">Results: <strong>{{ total_pipelines }}</strong></span>
+            {% if filters.status or filters.user or filters.date %}
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+              <i class="bi bi-check-circle-fill me-1"></i> Filter Active
+            </span>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{% url 'pipeline-list-page' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+            </a>
+            <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 fw-semibold shadow-sm">
+              <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="card-body p-0">
@@ -36,9 +117,12 @@
           <tr>
             <!-- 1. Name -->
             <td class="ps-4 py-3">
-              <a href="{% url 'pipeline-detail-page' pipeline.id %}" class="text-decoration-none fw-bold text-dark fs-6">
+              <a href="{% url 'pipeline-detail-page' pipeline.id %}" class="text-decoration-none fw-bold text-dark fs-6 d-block">
                 {{ pipeline.name }}
               </a>
+              <small class="text-muted" style="font-size: 0.75rem;">
+                by <span class="text-secondary fw-semibold">{% if pipeline.created_by %}{{ pipeline.created_by.username }}{% else %}System{% endif %}</span> &bull; {{ pipeline.created_at|date:"M d, Y" }}
+              </small>
             </td>
 
             <!-- 2. Status -->

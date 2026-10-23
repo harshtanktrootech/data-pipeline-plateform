@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from rest_framework import generics
 
@@ -45,16 +46,43 @@ class AuditLogDetailAPIView(generics.RetrieveAPIView):
     permission_classes = [IsAdmin]
 
 
-# ── Frontend HTML Views ──
+# ── Frontend HTML Views ── 
 
 @login_required(login_url="/login/")
 def audit_log_list_page(request):
-    """Admin-only view displaying system audit logs."""
+    """Admin-only view displaying system audit logs with user and date filtering."""
     is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
     
     if not is_admin:
         messages.error(request, "Permission Denied: Only Admins can access Audit Logs.")
         return redirect("pipeline-list-page")
 
-    logs = AuditLog.objects.select_related("user").all()[:100]
-    return render(request, "audit/audit_list.html", {"logs": logs})
+    logs = AuditLog.objects.select_related("user").all()
+
+    # 1. User Filter (Specific user or System)
+    user_id = request.GET.get("user", "").strip()
+    if user_id == "system":
+        logs = logs.filter(user__isnull=True)
+    elif user_id.isdigit():
+        logs = logs.filter(user_id=int(user_id))
+
+    # 2. Date Filter (Specific selected date)
+    date_filter = request.GET.get("date", "").strip()
+    if date_filter:
+        logs = logs.filter(timestamp__date=date_filter)
+
+    total_logs = logs.count()
+
+    return render(
+        request,
+        "audit/audit_list.html",
+        {
+            "logs": logs[:100],
+            "users": User.objects.all(),
+            "total_logs": total_logs,
+            "filters": {
+                "user": user_id,
+                "date": date_filter,
+            },
+        },
+    )

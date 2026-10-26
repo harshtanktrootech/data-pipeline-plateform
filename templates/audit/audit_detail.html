@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log #{{ log.id }} Details | Data Pipeline Platform{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <!-- Header -->
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a href="{% url 'audit-log-page' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Audit Logs
+                </a>
+                <h4 class="fw-bold mb-0 text-dark">Audit Log Entry #{{ log.id }}</h4>
+            </div>
+            <small class="text-muted">Recorded on {{ log.timestamp|date:"Y-m-d H:i:s" }}</small>
+        </div>
+
+        <div>
+            {% if status == "SUCCESS" %}
+            <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
+            </span>
+            {% elif status == "PARTIALLY_FAILED" %}
+            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> PARTIALLY FAILED
+            </span>
+            {% elif status == "FAILED" %}
+            <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill fw-bold">
+                <i class="bi bi-x-circle-fill me-1"></i> FAILED
+            </span>
+            {% else %}
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-2 rounded-pill fw-bold">
+                {{ status|default:"INFO" }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Details -->
+    <div class="card-body p-4 border-bottom bg-light-subtle">
+        <div class="row g-3">
+            <div class="col-12 col-md-3">
+                <span class="text-secondary small fw-bold text-uppercase d-block mb-1">User</span>
+                <span class="text-dark fw-semibold">
+                    {% if log.user %}
+                    <i class="bi bi-person me-1"></i> {{ log.user.username }}
+                    {% else %}
+                    <i class="bi bi-cpu me-1"></i> System / Celery Cron
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Timestamp</span>
+                <span class="text-dark font-monospace">{{ log.timestamp|date:"Y-m-d H:i:s" }}</span>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Action</span>
+                <span class="badge bg-primary-subtle text-primary border border-primary">
+                    {{ log.get_action_display }}
+                </span>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Resource</span>
+                {% if pipeline %}
+                <a href="{% url 'pipeline-detail-page' pipeline.id %}" class="fw-semibold text-decoration-none">
+                    <code>{{ log.resource }}</code>
+                </a>
+                {% else %}
+                <code class="text-dark fw-semibold">{{ log.resource }}</code>
+                {% endif %}
+            </div>
+
+            <div class="col-12">
+                <span class="text-secondary small fw-bold text-uppercase d-block mb-1">Details</span>
+                <div class="p-2 bg-white rounded-3 border small text-secondary">
+                    {{ log.details|default:"—" }}
+                </div>
+            </div>
+
+            {% if log.is_pipeline_run or records_added or records_failed %}
+            <div class="col-12 pt-2 border-top">
+                <div class="d-flex flex-wrap gap-4 align-items-center">
+                    <div>
+                        <small class="text-muted d-block">Records Added</small>
+                        <span class="fw-bold text-success fs-5">+{{ records_added }}</span>
+                    </div>
+                    {% if records_updated %}
+                    <div class="border-start ps-4">
+                        <small class="text-muted d-block">Records Updated</small>
+                        <span class="fw-bold text-primary fs-5">{{ records_updated }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="border-start ps-4">
+                        <small class="text-muted d-block">Records Failed</small>
+                        <span class="fw-bold text-danger fs-5">{{ records_failed }}</span>
+                    </div>
+                    <div class="border-start ps-4">
+                        <small class="text-muted d-block">Total in Run</small>
+                        <span class="fw-bold text-dark fs-5">{{ records_added|add:records_updated|add:records_failed }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 2 Tabs for Success and Failed Data -->
+    {% if log.is_pipeline_run or records_added or records_updated or records_failed %}
+    <div class="card-header bg-white pt-3 px-4 border-bottom">
+        <ul class="nav nav-tabs card-header-tabs" id="auditDetailTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'success' %}active fw-bold text-success{% else %}text-secondary{% endif %}"
+                        id="tab-success"
+                        data-bs-toggle="tab"
+                        data-bs-target="#pane-success"
+                        type="button"
+                        role="tab"
+                        aria-controls="pane-success"
+                        aria-selected="{% if active_tab == 'success' %}true{% else %}false{% endif %}">
+                    <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                    Success Records ({{ records_added|add:records_updated }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'failed' %}active fw-bold text-danger{% else %}text-secondary{% endif %}"
+                        id="tab-failed"
+                        data-bs-toggle="tab"
+                        data-bs-target="#pane-failed"
+                        type="button"
+                        role="tab"
+                        aria-controls="pane-failed"
+                        aria-selected="{% if active_tab == 'failed' %}true{% else %}false{% endif %}">
+                    <i class="bi bi-x-circle-fill me-1 text-danger"></i>
+                    Failed Records ({{ records_failed }})
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="auditDetailTabsContent">
+        <!-- TAB 1: SUCCESS DATA -->
+        <div class="tab-pane fade {% if active_tab == 'success' %}show active{% endif %}"
+             id="pane-success"
+             role="tabpanel"
+             aria-labelledby="tab-success">
+            
+            {% if success_rows %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 80px;">Row #</th>
+                            <th style="width: 100px;">Status</th>
+                            {% for col in success_headers %}
+                            <th>{{ col|title }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in success_rows %}
+                        <tr>
+                            <td class="ps-4 font-monospace small text-muted">#{{ row.row_number }}</td>
+                            <td>
+                                {% if row.action == "updated" %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1 rounded-pill small">
+                                    Updated
+                                </span>
+                                {% else %}
+                                <span class="badge bg-success-subtle text-success border border-success px-2 py-1 rounded-pill small">
+                                    Added
+                                </span>
+                                {% endif %}
+                            </td>
+                            {% for cell in row.cells %}
+                            <td class="small text-dark">
+                                {% if cell is None %}
+                                <span class="text-muted fst-italic">NULL</span>
+                                {% else %}
+                                {{ cell }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% elif records_added or records_updated %}
+            <div class="p-4 text-center text-muted">
+                <i class="bi bi-check-circle fs-3 text-success d-block mb-1"></i>
+                {{ records_added|add:records_updated }} records were successfully added/updated into the table.
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="bi bi-inbox fs-3 text-secondary d-block mb-1"></i>
+                No records were added or updated.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- TAB 2: FAILED DATA -->
+        <div class="tab-pane fade {% if active_tab == 'failed' %}show active{% endif %}"
+             id="pane-failed"
+             role="tabpanel"
+             aria-labelledby="tab-failed">
+            
+            {% if failed_rows %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 90px;">Row #</th>
+                            {% for col in failed_headers %}
+                            <th>{{ col|title }}</th>
+                            {% endfor %}
+                            <th class="pe-4 text-danger">Error Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in failed_rows %}
+                        <tr>
+                            <td class="ps-4 font-monospace small text-danger fw-bold align-top">
+                                {% if row.row_number and row.row_number > 0 %}
+                                Row {{ row.row_number }}
+                                {% else %}
+                                System
+                                {% endif %}
+                            </td>
+                            {% for cell in row.cells %}
+                            <td class="small text-dark align-top">
+                                {% if cell is None %}
+                                <span class="text-muted fst-italic">NULL</span>
+                                {% else %}
+                                {{ cell }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                            <td class="pe-4 align-top">
+                                <span class="text-danger small font-monospace">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ row.error }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-muted">
+                <i class="bi bi-check-circle fs-3 text-success d-block mb-1"></i>
+                No failed records found for this run.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

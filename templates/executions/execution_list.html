@@ -60,6 +60,7 @@
           <select name="status" class="form-select form-select-sm rounded-3">
             <option value="">All Statuses</option>
             <option value="SUCCESS" {% if filters.status == "SUCCESS" %}selected{% endif %}>SUCCESS</option>
+            <option value="PARTIALLY_FAILED" {% if filters.status == "PARTIALLY_FAILED" %}selected{% endif %}>PARTIALLY FAILED</option>
             <option value="FAILED" {% if filters.status == "FAILED" %}selected{% endif %}>FAILED</option>
             <option value="RUNNING" {% if filters.status == "RUNNING" %}selected{% endif %}>RUNNING</option>
           </select>
@@ -154,6 +155,18 @@
               <span class="badge bg-success-subtle text-success border border-success px-3 py-1 rounded-pill fw-bold">
                 <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
               </span>
+              {% elif exec.status == "PARTIALLY_FAILED" %}
+              <div class="d-inline-flex flex-column align-items-start">
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-1 rounded-pill fw-bold">
+                  <i class="bi bi-exclamation-triangle-fill me-1"></i> PARTIAL
+                </span>
+                {% if exec.error_message %}
+                <button type="button" class="btn btn-link btn-sm p-0 text-danger text-decoration-none small mt-1 font-monospace"
+                        data-bs-toggle="modal" data-bs-target="#errorModal{{ exec.id }}" style="font-size: 0.75rem;">
+                  <i class="bi bi-info-circle me-1"></i> {{ exec.error_message|truncatechars:35 }}
+                </button>
+                {% endif %}
+              </div>
               {% elif exec.status == "FAILED" %}
               <div class="d-inline-flex flex-column align-items-start">
                 <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-1 rounded-pill fw-bold">
@@ -197,7 +210,7 @@
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content rounded-4 border-0 shadow">
                 <div class="modal-header border-bottom">
-                  <h6 class="modal-title text-danger fw-bold d-flex align-items-center gap-2" id="errorModalLabel{{ exec.id }}">
+                  <h6 class="modal-title {% if exec.status == 'PARTIALLY_FAILED' %}text-warning-emphasis{% else %}text-danger{% endif %} fw-bold d-flex align-items-center gap-2" id="errorModalLabel{{ exec.id }}">
                     <i class="bi bi-exclamation-triangle-fill"></i> Failure Details: {{ exec.pipeline.name }} (Run #{{ exec.id }})
                   </h6>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -205,11 +218,37 @@
                 <div class="modal-body p-4">
                   <p class="small text-muted mb-2">Timestamp: <strong>{{ exec.started_at|date:"Y-m-d H:i:s" }}</strong></p>
                   <p class="small text-muted mb-2">Triggered By: <strong>{{ exec.trigger_label }}</strong></p>
+                  
+                  <div class="d-flex gap-2 mb-3">
+                    <span class="badge bg-success-subtle text-success border border-success px-2 py-1 rounded-pill">
+                      +{{ exec.records_added }} Added
+                    </span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1 rounded-pill">
+                      {{ exec.records_updated }} Updated
+                    </span>
+                    <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1 rounded-pill">
+                      {{ exec.records_failed }} Failed
+                    </span>
+                  </div>
+
                   <div class="p-3 bg-light rounded-3 border font-monospace text-danger small">
                     {{ exec.error_message }}
                   </div>
                 </div>
-                <div class="modal-footer border-top-0 pt-0">
+                <div class="modal-footer border-top-0 pt-0 d-flex justify-content-between">
+                  {% if is_admin %}
+                  {% with audit_entry=exec.audit_logs.first %}
+                  {% if audit_entry %}
+                  <a href="{% url 'audit-log-detail-page' audit_entry.id %}" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                    <i class="bi bi-shield-check me-1"></i> View Full Audit Log Details
+                  </a>
+                  {% else %}
+                  <div></div>
+                  {% endif %}
+                  {% endwith %}
+                  {% else %}
+                  <div></div>
+                  {% endif %}
                   <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Close</button>
                 </div>
               </div>

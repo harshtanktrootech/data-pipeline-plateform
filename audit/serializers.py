@@ -22,6 +22,12 @@ class AuditLogSerializer(serializers.ModelSerializer):
             "action_display",
             "resource",
             "details",
+            "status",
+            "records_added",
+            "records_updated",
+            "records_failed",
+            "error_details",
+            "execution",
             "timestamp",
         ]
         read_only_fields = fields

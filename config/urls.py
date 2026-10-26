@@ -19,7 +19,7 @@ from pipelines.views import (
     pipeline_toggle_status_page,
     schedule_pipeline_view,
 )
-from audit.views import audit_log_list_page
+from audit.views import audit_log_list_page, audit_log_detail_page
 from dashboard.views import dashboard_view
 
 from executions.views import (
@@ -61,4 +61,5 @@ urlpatterns = [
     path("pipelines/<int:pk>/schedule/", schedule_pipeline_view, name="pipeline-schedule"),
     path("executions/", include("executions.urls")),
     path("audit/", audit_log_list_page, name="audit-log-page"),
+    path("audit/<int:pk>/", audit_log_detail_page, name="audit-log-detail-page"),
 ]

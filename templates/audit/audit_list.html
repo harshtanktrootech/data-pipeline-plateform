@@ -86,14 +86,17 @@
                     <th>User</th>
                     <th>Action</th>
                     <th>Resource</th>
-                    <th class="pe-4">Details</th>
+                    <th>Outcome</th>
+                    <th class="pe-4 text-end">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for log in logs %}
                 <tr>
                     <td class="ps-4 font-monospace small text-muted">
-                        {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                        <a href="{% url 'audit-log-detail-page' log.id %}" class="text-decoration-none text-muted">
+                            {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                        </a>
                     </td>
                     <td>
                         {% if log.user %}
@@ -110,12 +113,46 @@
                             {{ log.get_action_display }}
                         </span>
                     </td>
-                    <td><code class="text-dark fw-semibold">{{ log.resource }}</code></td>
-                    <td class="pe-4 text-secondary small">{{ log.details|default:"—" }}</td>
+                    <td>
+                        <a href="{% url 'audit-log-detail-page' log.id %}" class="text-decoration-none">
+                            <code class="text-dark fw-semibold">{{ log.resource }}</code>
+                        </a>
+                    </td>
+                    <td>
+                        {% if log.outcome_status == "SUCCESS" %}
+                        <span class="badge bg-success-subtle text-success border border-success rounded-pill px-3 py-1">
+                            <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
+                        </span>
+                        {% elif log.outcome_status == "PARTIALLY_FAILED" %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning rounded-pill px-3 py-1">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> PARTIAL
+                        </span>
+                        {% elif log.outcome_status == "FAILED" %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 py-1">
+                            <i class="bi bi-x-circle-fill me-1"></i> FAILED
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary rounded-pill px-3 py-1">
+                            INFO
+                        </span>
+                        {% endif %}
+
+                        {% if log.is_pipeline_run %}
+                        <span class="ms-1 small text-muted font-monospace">
+                            {% if log.display_records_added %}+{{ log.display_records_added }} added{% endif %}
+                            {% if log.records_failed %}<span class="text-danger">({{ log.records_failed }} err)</span>{% endif %}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-4 text-end">
+                        <a href="{% url 'audit-log-detail-page' log.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm py-1">
+                            <i class="bi bi-eye me-1"></i> View Details
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">
+                    <td colspan="6" class="text-center py-5 text-muted">
                         <i class="bi bi-inbox fs-2 d-block text-secondary mb-1"></i>
                         No audit events recorded yet.
                     </td>

@@ -35,6 +35,8 @@ class Pipeline(models.Model):
     source = models.CharField(
         max_length=200,
         choices=get_available_data_files,
+        blank=True,
+        default="",
         help_text="Source CSV dataset file",
     )
 

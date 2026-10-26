@@ -1,4 +1,6 @@
+import os
 from django import forms
+from django.conf import settings
 from pipelines.models import Pipeline, get_available_data_files
 
 
@@ -10,7 +12,7 @@ class PipelineCreateForm(forms.ModelForm):
             "id": "id_source",
         }),
     )
-    
+
     table_name = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
@@ -46,10 +48,8 @@ class PipelineCreateForm(forms.ModelForm):
             }),
         }
 
-
     def clean_source(self):
         source = self.cleaned_data.get("source")
         if not source:
             raise forms.ValidationError("Please select a valid dataset file from the dropdown.")
         return source
-

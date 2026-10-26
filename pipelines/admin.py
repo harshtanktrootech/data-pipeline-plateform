@@ -1,9 +1,29 @@
+from django import forms
 from django.contrib import admin
-from pipelines.models import Pipeline
+from pipelines.models import Pipeline, get_available_data_files
+
+
+class PipelineAdminForm(forms.ModelForm):
+    source = forms.ChoiceField(
+        choices=get_available_data_files,
+        required=True,
+        help_text="Please select a valid dataset file from the dropdown.",
+    )
+
+    class Meta:
+        model = Pipeline
+        fields = "__all__"
+
+    def clean_source(self):
+        source = self.cleaned_data.get("source")
+        if not source:
+            raise forms.ValidationError("Please select a valid dataset file from the dropdown.")
+        return source
 
 
 @admin.register(Pipeline)
 class PipelineAdmin(admin.ModelAdmin):
+    form = PipelineAdminForm
     list_display = (
         "id",
         "name",
@@ -43,4 +63,3 @@ class PipelineAdmin(admin.ModelAdmin):
         if not obj.created_by_id:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
-

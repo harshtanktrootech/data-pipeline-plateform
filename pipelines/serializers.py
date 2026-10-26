@@ -10,10 +10,8 @@ class PipelineSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "source",
-            "status",
             "description",
-            "table_name",
+            "status",
             "created_by",
             "created_at",
             "updated_at",
@@ -26,19 +24,10 @@ class PipelineSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-
     def validate_name(self, value):
-
         value = value.strip()
-
         if not value:
-            raise serializers.ValidationError(
-                "Pipeline name cannot be empty."
-            )
-
+            raise serializers.ValidationError("Pipeline name cannot be empty.")
         if len(value) < 3:
-            raise serializers.ValidationError(
-                "Pipeline name must contain at least 3 characters."
-            )
-
+            raise serializers.ValidationError("Pipeline name must contain at least 3 characters.")
         return value

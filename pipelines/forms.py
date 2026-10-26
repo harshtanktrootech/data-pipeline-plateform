@@ -1,21 +1,5 @@
-import os
 from django import forms
-from django.conf import settings
-from pipelines.models import Pipeline
-
-
-def get_available_data_files():
-    # Dynamically scan data/ folder and list all CSV files as dropdown choices
-    data_dir = os.path.join(settings.BASE_DIR, "data")
-    choices = [("", "-- Select Dataset --")]
-
-    if os.path.exists(data_dir):
-        for file in sorted(os.listdir(data_dir)):
-            if file.endswith(".csv"):
-                display_name = file.replace(".csv", "").replace("_", " ").title() + f" ({file})"
-                file_path = f"data/{file}"
-                choices.append((file_path, display_name))
-    return choices
+from pipelines.models import Pipeline, get_available_data_files
 
 
 class PipelineCreateForm(forms.ModelForm):

@@ -10,8 +10,10 @@ class PipelineSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "description",
+            "source",
             "status",
+            "description",
+            "table_name",
             "created_by",
             "created_at",
             "updated_at",

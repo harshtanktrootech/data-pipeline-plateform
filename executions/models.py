@@ -6,6 +6,7 @@ from pipelines.models import Pipeline
 class PipelineExecution(models.Model):
     STATUS_CHOICES = [
         ("SUCCESS", "Success"),
+        ("PARTIALLY_FAILED", "Partially Failed"),
         ("FAILED", "Failed"),
         ("RUNNING", "Running"),
     ]
@@ -35,9 +36,13 @@ class PipelineExecution(models.Model):
     records_extracted = models.IntegerField(default=0)
     records_processed = models.IntegerField(default=0)
     records_loaded = models.IntegerField(default=0)
+    records_added = models.IntegerField(default=0)
+    records_updated = models.IntegerField(default=0)
+    records_failed = models.IntegerField(default=0)
     duration_seconds = models.FloatField(default=0.0)
 
     error_message = models.TextField(blank=True, null=True)
+    error_details = models.JSONField(blank=True, null=True, default=dict)
     attempts = models.IntegerField(default=1)
 
     started_at = models.DateTimeField(auto_now_add=True)

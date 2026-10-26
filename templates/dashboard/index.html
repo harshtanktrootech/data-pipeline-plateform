@@ -146,11 +146,15 @@
                         <td>
                             {% if activity.status == 'SUCCESS' %}
                             <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Success</span>
+                            {% elif activity.status == 'PARTIALLY_FAILED' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="bi bi-exclamation-triangle me-1"></i>Partial</span>
                             {% elif activity.status == 'FAILED' %}
                             <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Failed</span>
-                            {% else %}
+                            {% elif activity.status == 'RUNNING' %}
                             <span class="badge bg-warning text-dark"><i
                                     class="bi bi-arrow-repeat me-1"></i>Running</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ activity.status }}</span>
                             {% endif %}
                         </td>
                         <td>

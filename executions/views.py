@@ -63,7 +63,7 @@ def execution_history_page(request):
     
     # 2. Status Filter (SUCCESS, FAILED, RUNNING)
     status_filter = request.GET.get("status", "").strip().upper()
-    if status_filter in ["SUCCESS", "FAILED", "RUNNING"]:
+    if status_filter in ["SUCCESS", "FAILED", "RUNNING", "PARTIALLY_FAILED"]:
         executions = executions.filter(status=status_filter)
     else:
         status_filter = ""

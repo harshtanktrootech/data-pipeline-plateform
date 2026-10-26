@@ -156,6 +156,8 @@
                 <span class="fw-semibold text-dark">{{ pipeline.last_run_display }}</span>
                 {% if pipeline.last_execution.status == "SUCCESS" %}
                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0" style="font-size: 0.72rem;">SUCCESS</span>
+                {% elif pipeline.last_execution.status == "PARTIALLY_FAILED" %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0" style="font-size: 0.72rem;">PARTIAL</span>
                 {% elif pipeline.last_execution.status == "FAILED" %}
                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-0" style="font-size: 0.72rem;">FAILED</span>
                 {% elif pipeline.last_execution.status == "RUNNING" %}

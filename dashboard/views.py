@@ -16,7 +16,7 @@ def get_dashboard_stats():
 
     exec_stats = PipelineExecution.objects.aggregate(
         successful_executions=Count("id", filter=Q(status="SUCCESS")),
-        failed_executions=Count("id", filter=Q(status="FAILED")),
+        failed_executions=Count("id", filter=Q(status__in=["FAILED", "PARTIALLY_FAILED"])),
         running_executions=Count("id", filter=Q(status="RUNNING")),
         avg_execution_time=Avg("duration_seconds"),
     )
@@ -24,12 +24,12 @@ def get_dashboard_stats():
     active_pipelines = Pipeline.objects.filter(status="active").count()
     disabled_pipelines = Pipeline.objects.filter(status="inactive").count()
 
-    # Failing pipelines: pipelines whose most recent execution status was FAILED
+    # Failing pipelines: pipelines whose most recent execution status was FAILED or PARTIALLY_FAILED
     failing_pipelines = 0
     all_pipelines = Pipeline.objects.prefetch_related("executions").all()
     for p in all_pipelines:
         latest_run = p.executions.first()
-        if latest_run and latest_run.status == "FAILED":
+        if latest_run and latest_run.status in ("FAILED", "PARTIALLY_FAILED"):
             failing_pipelines += 1
 
     recent_activities = PipelineExecution.objects.select_related(

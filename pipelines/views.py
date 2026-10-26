@@ -75,7 +75,12 @@ class PipelineRunAPIView(APIView):
             )
 
         result = run_pipeline(pipeline, triggered_by=request.user)
-        status_code = 200 if result["status"] == "SUCCESS" else 500
+        if result["status"] == "SUCCESS":
+            status_code = 200
+        elif result["status"] == "PARTIALLY_FAILED":
+            status_code = 207  # Multi-Status / Partial
+        else:
+            status_code = 500
         return Response(result, status=status_code)
 
 
@@ -154,20 +159,17 @@ def pipeline_detail_page(request, pk):
     """Displays pipeline details, dynamic DB table preview, execution history, and cron schedule."""
     pipeline = get_object_or_404(Pipeline.objects.select_related("created_by"), pk=pk)
     
-    # 1. Fetch live data preview from the dynamic DB table (Admin Only)
-    is_admin = request.user.is_superuser or request.user.groups.filter(name="Admin").exists()
-    preview_headers = []
-    preview_rows = []
+    # 1. Check if destination table exists and count total rows loaded
+    table_exists = False
     total_db_rows = 0
-    if is_admin and pipeline.table_name:
+    if pipeline.table_name:
         try:
             with connection.cursor() as cursor:
                 cursor.execute(f'SELECT count(*) FROM "{pipeline.table_name}";')
                 total_db_rows = cursor.fetchone()[0]
-                cursor.execute(f'SELECT * FROM "{pipeline.table_name}" LIMIT 5;')
-                preview_headers = [col[0] for col in cursor.description]
-                preview_rows = cursor.fetchall()
+                table_exists = True
         except Exception:
+            table_exists = False
             total_db_rows = 0
 
     # 2. Fetch the 10 most recent execution runs for this pipeline
@@ -185,8 +187,7 @@ def pipeline_detail_page(request, pk):
         "pipelines/pipeline_details.html",
         {
             "pipeline": pipeline,
-            "preview_headers": preview_headers,
-            "preview_rows": preview_rows,
+            "table_exists": table_exists,
             "total_db_rows": total_db_rows,
             "executions": executions,
             "last_execution": last_execution,
@@ -222,7 +223,14 @@ def run_pipeline_page_view(request, pk):
                 request,
                 f"Pipeline '{pipeline.name}' executed successfully! "
                 f"Extracted: {result['records_extracted']} | "
-                f"Loaded: {result['records_loaded']} records in {result['duration_seconds']}s."
+                f"Added: {result['records_added']} | Updated: {result['records_updated']} in {result['duration_seconds']}s."
+            )
+        elif result["status"] == "PARTIALLY_FAILED":
+            messages.warning(
+                request,
+                f"Pipeline '{pipeline.name}' finished with partial failures! "
+                f"Added: {result['records_added']} | Updated: {result['records_updated']} | "
+                f"Failed: {result['records_failed']} rows. View Audit Log for row-level error breakdown."
             )
         else:
             messages.error(request, f"Pipeline execution failed: {result['error']}")

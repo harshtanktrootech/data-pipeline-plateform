@@ -1,30 +1,51 @@
+import csv
 import os
 import pandas as pd
 
 
-def extract_data(source: str) -> pd.DataFrame:
+def extract_data(source: str):
     """
     Step 1: EXTRACT
-    Reads data from a CSV file into a Pandas DataFrame.
+    Reads CSV into a DataFrame and captures any malformed rows with line numbers.
     """
-    # 1. Check if source path is specified
-    if not source or not str(source).strip():
-        raise FileNotFoundError("Pipeline source file path is empty.")
+    if not source or not os.path.exists(source) or not source.lower().endswith(".csv"):
+        raise FileNotFoundError(f"Valid CSV file not found at: '{source}'")
 
-    # 2. Check if file exists on disk
-    if not os.path.exists(source):
-        raise FileNotFoundError(f"Source file not found at: '{source}'")
+    valid_rows = []
+    failed_rows = []
+    indices = []
 
-    # 3. Check if file format is CSV
-    if not source.lower().endswith(".csv"):
-        raise ValueError("Only CSV files are supported.")
+    with open(source, "r", encoding="utf-8-sig", errors="replace") as f:
+        reader = csv.reader(f)
+        headers = [h.strip() for h in next(reader, [])]
+        expected_cols = len(headers)
 
-    # 4. Read CSV into DataFrame
-    df = pd.read_csv(source)
+        if not headers:
+            raise ValueError(f"Source file '{source}' is empty.")
 
-    # 5. Check if file is empty
-    if df.empty:
-        raise ValueError(f"Source file '{source}' is empty (0 records).")
+        for line_num, row in enumerate(reader, start=2):
+            if not row or not any(row):  # Skip blank lines
+                continue
 
-    return df
+            cleaned_values = [v.strip() for v in row]
+            row_dict = dict(zip(headers, cleaned_values))
 
+            if len(row) != expected_cols:
+                failed_rows.append({
+                    "row_number": line_num,
+                    "data": row_dict,
+                    "error": f"Expected {expected_cols} columns, found {len(row)}",
+                })
+            else:
+                valid_rows.append(row_dict)
+                indices.append(line_num)
+
+    if not valid_rows and not failed_rows:
+        raise ValueError(f"Source file '{source}' has no data rows.")
+
+    if valid_rows:
+        df = pd.DataFrame(valid_rows, index=indices)
+    else:
+        df = pd.DataFrame(columns=headers)
+
+    return df, failed_rows

@@ -23,8 +23,11 @@ def transform_data(df: pd.DataFrame):
     3. Strips whitespace from text values and converts null markers to None.
     4. Separates valid records and failed rows.
     """
-    if df is None or df.empty:
-        raise ValueError("Data Validation Error: Input dataset is empty.")
+    if df is None:
+        raise ValueError("Data Validation Error: Input dataset is None.")
+
+    if df.empty:
+        return [], []
 
     df = df.copy()
 
@@ -39,7 +42,8 @@ def transform_data(df: pd.DataFrame):
 
     # 3. Process each row
     for idx, row in df.iterrows():
-        line_num = idx + 2  # Row number in original CSV (1-indexed + header)
+        # Preserve original CSV line number if indexed by extractor, otherwise fallback
+        line_num = idx if (isinstance(idx, int) and idx > 0) else (idx + 2 if isinstance(idx, int) else 0)
 
         cleaned_row = {}
         is_row_empty = True

@@ -37,8 +37,8 @@ def run_pipeline(pipeline: Pipeline, triggered_by=None, max_retries=3):
             # --------------------------------------------------
             # Step 1: EXTRACT
             # --------------------------------------------------
-            raw_data = extract_data(pipeline.source)
-            total_extracted = len(raw_data)
+            raw_data, extract_failed = extract_data(pipeline.source)
+            total_extracted = len(raw_data) + len(extract_failed)
 
             # --------------------------------------------------
             # Step 2: TRANSFORM
@@ -52,7 +52,7 @@ def run_pipeline(pipeline: Pipeline, triggered_by=None, max_retries=3):
 
             records_added = load_result["records_added"]
             success_rows = load_result["success_rows"]
-            all_failed_rows = transform_failed + load_result["failed_rows"]
+            all_failed_rows = extract_failed + transform_failed + load_result["failed_rows"]
             records_failed = len(all_failed_rows)
 
             # Determine execution outcome status

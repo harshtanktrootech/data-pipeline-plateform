@@ -1,0 +1,24 @@
+PAT001,Rahul,Sharma,Male,1995-05-12,9876543210,rahul@gmail.com,APT001,2026-10-01,10:30,DR001,Dr Mehta,Cardiology,Consultation,Hypertension,Medication,1500,Paid
+PAT002,Priya,Patel,Female,1998-11-23,9876543211,priya@gmail.com,APT002,2026-10-02,11:00,DR002,Dr Shah,Neurology,Follow-up,Migraine,Medication,1200,Paid
+PAT003,Amit,Kumar,Male,INVALID_DATE,9876543212,amit@gmail.com,APT003,2026-10-03,09:30,DR003,Dr Rao,Orthopedics,Consultation,Back Pain,Physiotherapy,2000,Pending
+PAT004,Neha,Gupta,Female,1990-03-15,ABC123,neha@gmail.com,APT004,2026-10-04,14:00,DR001,Dr Mehta,Cardiology,Emergency,Heart Pain,ECG,5000,Paid
+PAT005,Ravi,Verma,Male,1985-07-20,9876543214,wrong-email,APT005,2026-10-05,10:00,DR004,Dr Patel,Dermatology,Consultation,Skin Allergy,Medication,-500,Pending
+PAT006,Anjali,Shah,Female,2000-02-30,9876543215,anjali@gmail.com,APT006,2026-10-06,INVALID_TIME,DR005,Dr Joshi,ENT,Consultation,Ear Infection,Medication,1000,Paid
+PAT007,Karan,Mehta,Male,1992-08-10,9876543216,karan@gmail.com,APT007,2026-10-07,12:00,DR006,Dr Desai,Pediatrics,Consultation,Fever,Medication,800,Paid
+PAT008,Simran,Kaur,Female,1997-04-18,9876543217,simran@gmail.com,APT008,2026-10-08,13:00,DR007,Dr Singh,Gynecology,Follow-up,General Checkup,Consultation,1500
+PAT009,Arjun,Patel,Male,1988-09-12,9876543218,arjun@gmail.com,APT009,2026-10-09,15:30,DR008,Dr Shah,Neurology,Emergency,Severe Headache,CT Scan,8000,Unpaid,EXTRA_COLUMN
+PAT010,Pooja,Desai,Female,1996-12-05,9876543219,pooja@gmail.com,APT010,2026-10-10,09:00,DR001,Dr Mehta,Cardiology,Consultation,Chest Pain,ECG,2000,Paid
+PAT011,Rohit,Kumar,Male,1980-06-15,9876543220,rohit@gmail.com,APT011,2026-10-11,10:00,DR009,Dr Rao,Orthopedics,Follow-up,Knee Pain,Physiotherapy,2500,Pending
+PAT012,Meera,Iyer,Female,1999-01-25,9876543221,meera@gmail.com,APT012,2026-10-12,11:30,DR010,Dr Nair,Dermatology,Consultation,Acne,Treatment,1200,Paid
+PAT013,Varun,Joshi,Male,1975-05-19,9876543222,varun@gmail.com,APT013,2026-10-13,14:00,DR003,Dr Rao,Cardiology,Emergency,High BP,ECG,4500,Paid
+PAT014,Divya,Reddy,Female,2001-10-10,9876543223,divya@gmail.com,APT014,2026-10-14,10:30,DR002,Dr Shah,Neurology,Consultation,Migraine,Medication,1500,PAID
+PAT015,Manish,Shah,Male,1993-02-28,9876543224,manish@gmail.com,APT015,2026-10-15,16:00,DR005,Dr Joshi,ENT,Consultation,Cold,Medication,900,Paid
+PAT016,Sneha,Patel,Female,1994-07-12,9876543225,sneha@gmail.com,APT016,2026-10-16,10:00,DR006,Dr Desai,Pediatrics,Follow-up,Fever,Medication,1000,Pending
+PAT017,Akash,Verma,Male,1987-03-21,9876543226,akash@gmail.com,APT017,2026-10-17,09:00,DR007,Dr Singh,Gynecology,Consultation,Checkup,Consultation,1800,Paid
+PAT018,Neha,Sharma,Female,1991-09-14,9876543227,neha@gmail.com,APT018,2026-10-18,11:00,DR008,Dr Shah,Neurology,Emergency,Head Injury,CT Scan,9000,Paid
+PAT019,Rahul,Sharma,Male,1995-05-12,9876543210,rahul@gmail.com,APT001,2026-10-01,10:30,DR001,Dr Mehta,Cardiology,Consultation,Hypertension,Medication,1500,Paid
+PAT020,Test,User,Unknown,,INVALID,not-an-email,APT020,2026-99-99,30:90,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,ABC,UNKNOWN
+PAT021,Kavya,Joshi,Female,1998-06-11,9876543229,kavya@gmail.com,APT021,2026-10-21,10:00,DR001,Dr Mehta,Cardiology,Consultation,Hypertension,Medication,1500
+PAT022,Ankit,Mehta,Male,1989-08-20,9876543230,ankit@gmail.com,APT022,2026-10-22,11:00,DR004,Dr Patel,Dermatology,Consultation,Allergy,Medication,1200,Paid,EXTRA1,EXTRA2
+PAT023,Priya,Rao,Female,1997-12-15,9876543231,priya@gmail.com,APT023,2026-10-23,12:00,DR003,Dr Rao,Cardiology,Follow-up,Blood Pressure,Medication,2000,Paid
+PAT024,Dev,Malhotra,Male,1986-04-10,9876543232,dev@gmail.com,APT024,2026-10-24,13:00,DR009,Dr Rao,Orthopedics,Consultation,Fracture,X-Ray,3000,Paid

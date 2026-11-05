@@ -1,0 +1,35 @@
+ORD3001,CUST1001,2026-10-01,PROD501,Wireless Mouse,Electronics,Logitech,2,799.00,50,134.82,1682.82,UPI,Delivered,Satellite Road,Ahmedabad,150,WH001
+ORD3002,,INVALID_DATE,PROD502,Keyboard,Electronics,HP,-5,1200,ABC,ERROR,Infinity,Crypto,UNKNOWN,,Ahmedabad,-20,
+ORD3003,CUST1003,2026-10-03,,Running Shoes,Footwear,Nike,2,-2500,100,XYZ,-5000,UPI,Shipped,CG Road,Ahmedabad,50,WH002
+ORD3004,CUST1004,2026-10-04,PROD504,Smart Watch,Electronics,Apple,ABC,15000,500,2610,ERROR,Card,Delivered,Navrangpura,Ahmedabad,UNKNOWN,WH003
+ORD3005,CUST1005,2026-10-05,PROD505,Office Chair,Furniture,IKEA,3,4500,-200,2430,15730,Bank Transfer,Delivered,Maninagar,Ahmedabad,25,WH001
+ORD3006,CUST1006,2026-02-30,PROD506,Water Bottle,Accessories,Milton,10,350,0,630,4130,Cash,Pending,Vastrapur,Ahmedabad,200,WH002
+ORD3007,CUST1007,2026-10-07,PROD507,Headphones,Electronics,Sony,2,2500,100,432,5332,UPI,COMPLETED,Bodakdev,Ahmedabad,80,WH003
+ORD3008,CUST1008,2026-10-08,PROD508,T-Shirt,Clothing,Adidas,4,999,100,647.35,4543.35,UPI,Delivered,Paldi,Ahmedabad,100,WH001
+ORD3009,CUST1009,2026-10-09,PROD509,Refrigerator,Appliances,LG,1,35000,1000,6120,40120,Credit Card,Delivered,Satellite,Ahmedabad,-10,WH999
+ORD3010,CUST1010,2026-10-10,PROD510,Laptop,Electronics,Dell,1,65000,2000,11340,74340,Bitcoin,Shipped,SG Highway,Ahmedabad,15,WH002
+ORD3011,CUST1011,2026-10-11,PROD511,Office Desk,Furniture,Godrej,2,8500,500,2970,19470,UPI,Delivered,Thaltej,Ahmedabad,30,WH001
+ORD3012,CUST1012,2026-10-12,PROD512,Blender,Appliances,Philips,3,2200,200,1188,7588,UPI,Returned,South Bopal,Ahmedabad,40,WH002
+ORD3013,CUST1013,2026-10-13,PROD513,Jeans,Clothing,Levis,2,1800,100,630,4130,Card,Delivered,Chandkheda,Ahmedabad,70,WH003
+ORD3014,CUST1014,2026-10-14,PROD514,Tablet,Electronics,Samsung,1,18000,500,3150,20650,UPI,Delivered,Ahmedabad,Ahmedabad,20,WH001
+ORD3015,CUST1015,2026-10-15,PROD515,Travel Bag,Luggage,American Tourister,2,2500,200,864,5664,UPI,Delivered,Bopal,Ahmedabad,50,WH002
+ORD3016,CUST1016,2026-10-16,PROD516,Air Conditioner,Appliances,Voltas,1,42000,1000,7380,48380,UPI,Delivered,Navrangpura,Ahmedabad,10,WH003
+ORD3017,CUST1017,2026-10-17,PROD517,Monitor,Electronics,LG,2,12000,500,4230,27730,Card,Processing,Satellite Road,Ahmedabad,35,WH001
+ORD3018,CUST1018,2026-10-18,PROD518,Keyboard,Electronics,HP,5,1200,100,990,6890,UPI,Delivered,Maninagar,Ahmedabad,60,WH002
+ORD3019,CUST1019,2026-10-19,PROD519,Printer,Electronics,Canon,2,8500,500,2970,19470,Bank Transfer,Delivered,Paldi,Ahmedabad,18,WH003
+ORD3020,CUST1020,2026-10-20,PROD520,Smartphone,Electronics,Apple,1,75000,5000,12600,82600,UPI,Delivered,CG Road,Ahmedabad,12,WH001
+ORD3021,CUST1021,2026-10-21,PROD521,Desk Lamp,Home Decor,Philips,4,900,100,612,4112,UPI,Delivered,Vastrapur,Ahmedabad,90,WH002
+ORD3022,CUST1022,2026-10-22,PROD522,Bookshelf,Furniture,IKEA,1,6500,500,1080,7080,Credit Card,Delivered,Thaltej,Ahmedabad,15,WH003
+ORD3023,CUST1023,2026-10-23,PROD523,Running Shoes,Footwear,Nike,2,4500,500,1530,10030,UPI,Delivered,Satellite Road,Ahmedabad,45,WH001
+ORD3024,CUST1024,2026-10-24,PROD524,Smart Watch,Electronics,Apple,1,25000,1000,4320,28320,UPI,Delivered,Bodakdev,Ahmedabad,20,WH002
+ORD3025,CUST1025,2026-10-25,PROD525,Water Bottle,Accessories,Milton,10,350,0,630,4130,UPI,Delivered,Paldi,Ahmedabad,200,WH003
+ORD3026,CUST1026,2026-10-26,PROD526,Wireless Mouse,Electronics,Logitech,2,799,50,134.82,1682.82,UPI,Delivered,Satellite Road,Ahmedabad,150,WH001
+ORD3027,CUST1027,2026-10-27,PROD527,Refrigerator,Appliances,LG,1,35000,1000,6120,40120,UPI,Delivered,Navrangpura,Ahmedabad,25,WH002
+ORD3028,CUST1028,2026-10-28,PROD528,Office Chair,Furniture,IKEA,3,4500,200,2430,15730,UPI,Delivered,Maninagar,Ahmedabad,30,WH003
+ORD3029,CUST1029,2026-10-29,PROD529,Laptop,Electronics,Dell,1,65000,2000,11340,74340,UPI,Delivered,SG Highway,Ahmedabad,15,WH001
+ORD3030,CUST1030,2026-10-30,PROD530,Headphones,Electronics,Sony,2,2500,100,432,5332,UPI,Delivered,Thaltej,Ahmedabad,80,WH002
+ORD3031,CUST1031,2026-10-31,PROD531,T-Shirt,Clothing,Adidas,4,999,100,647.35,4543.35,UPI,Delivered,Paldi,Ahmedabad,100,WH003
+ORD3032,CUST1032,2026-11-01,PROD532,Tablet,Electronics,Samsung,1,18000,500,3150,20650,UPI,Delivered,Bopal,Ahmedabad,20,WH001
+ORD3033,CUST1033,2026-11-02,PROD533,Printer,Electronics,Canon,2,8500,500,2970,19470,UPI,Delivered,Satellite Road,Ahmedabad,18,WH002
+ORD3034,CUST1034,2026-11-03,PROD534,Blender,Appliances,Philips,3,2200,200,1188,7588,UPI,Delivered,CG Road,Ahmedabad,40,WH003
+ORD3035,CUST1035,2026-11-04,PROD535,Air Conditioner,Appliances,Voltas,1,42000,1000,7380,48380,UPI,Delivered,Navrangpura,Ahmedabad,10,WH001

@@ -1,0 +1,30 @@
+Employee ID #,Full - Name,Department,Designation,Monthly Base Salary ($),Attendance (Days),Overtime Hours,Tax Deductions ($),Net Pay ($),Status
+EMP-001,Johnathan Doe,Engineering,Senior Backend Engineer,8500.00,22,12.5,1275.00,7225.00,Active
+EMP-002,   Sarah Jenkins   ,Human Resources,HR Director,7200.00,21,0,1080.00,6120.00,Active
+EMP-003,Rahul R. Sharma,Sales,Enterprise Account Exec,6400.00,20,5.0,960.00,5440.00,Active
+EMP-004,Elena Rostova,Finance,Senior Accountant,5800.00,22,2.5,870.00,4930.00,Active
+EMP-005,Michael Chen,Engineering,DevOps Specialist,8100.00,21,8.0,1215.00,6885.00,Active
+EMP-006,Renée François,Marketing,Content Strategist,4900.00,19,0,735.00,4165.00,Active
+EMP-007,David Miller,null,Junior QA Tester,3800.00,22,15.0,570.00,3230.00,Active
+EMP-008,Amina Al-Mansoor,Operations,Logistics Coordinator,4500.00,20,4.0,675.00,3825.00,Active
+EMP-009,Liam O'Connor,Engineering,Frontend Lead,7900.00,22,6.0,1185.00,6715.00,Active
+EMP-010,Priya Patel,Human Resources,Talent Acquisition Lead,5200.00,21,0,N/A,5200.00,Active
+
+EMP-011,Carlos Santana,Sales,Sales Representative,4200.00,18,0,630.00,3570.00,On Leave
+EMP-012,Müller Hans,Engineering,Systems Architect,9600.00,22,10.0,1440.00,8160.00,Active
+EMP-013,Jessica Taylor,Design,Lead UI/UX Designer,6800.00,21,1.5,1020.00,5780.00,Active
+EMP-014,Kwame Mensah,Support,Technical Support Rep,3600.00,22,8.0,None,3600.00,Active
+EMP-015,   Emily Clark   ,Finance,Payroll Specialist,5100.00,20,3.0,765.00,4335.00,Active
+,,,,,,,,,
+EMP-016,Vikram Malhotra,Engineering,Cloud Engineer,8300.00,21,11.0,1245.00,7055.00,Active
+EMP-017,Zoe Robinson,Marketing,SEO Analyst,4300.00,22,0,645.00,3655.00,Active
+EMP-018,Taro Yamada,Product,Product Manager,8900.00,22,5.0,1335.00,7565.00,Active
+EMP-019,Fatima Zahra,Legal,Corporate Counsel,9200.00,20,0,1380.00,7820.00,Active
+EMP-020,Lucas Silva,Sales,BDR Representative,3900.00,16,0,585.00,3315.00,Terminated
+EMP-021,Hannah Schmidt,Engineering,Data Engineer,7800.00,22,7.5,1170.00,6630.00,Active
+EMP-022,Alex Wong,Operations,Facilities Manager,4600.00,21,2.0,690.00,3910.00,Active
+EMP-023,Beatrice V. Silva,Human Resources,HR Assistant,3400.00,22,0,510.00,2890.00,Active
+EMP-024,Gabriel Rossi,Engineering,Security Engineer,8400.00,21,9.0,1260.00,7140.00,Active
+EMP-025,Nathalie Dupont,Design,Graphic Designer,4500.00,19,0,NaN,4500.00,Active
+EMP-026,Corrupted Missing Columns Row,Engineering,Engineer
+EMP-027,Corrupted Extra Columns Row,Marketing,Lead,5000.00,22,5.0,750.00,4250.00,Active,EXTRA_99999,MALFORMED_DATA

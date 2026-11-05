@@ -1,0 +1,11 @@
+Customer_ID,Customer_Name,Email,Phone,Company,Lead_Status,Sales_Rep,Created_Date
+C001,Rahul Shah,rahul@gmail.com,9876543210,ABC Ltd,New,Amit,2026-10-01
+C002,Priya Patel,priya@gmail.com,9876543211,XYZ Pvt Ltd,Qualified,Neha,2026-10-02
+C003,Amit Kumar,amitgmail.com,9876543212,Tech Solutions,New,Ravi,2026-10-03
+C004,Neha Singh,neha@gmail.com,,Global Ltd,Contacted,Amit,2026-10-04
+C005,Rohan Mehta,rohan@gmail.com,9876543214,ABC Ltd,InvalidStatus,Neha,2026-10-05
+C006,Rahul Shah,rahul@gmail.com,9876543210,ABC Ltd,New,Amit,2026-10-01
+C007,Simran Kaur,simran@gmail.com,98765,Digital World,Qualified,Ravi,2026-15-40
+C008,,unknown@gmail.com,9876543218,Future Tech,New,Unknown,2026-10-08
+C009,Karan Joshi,karan@gmail.com,9876543219,Smart Systems,Won,Amit,2026-10-09
+C010,Anjali Desai,anjali@gmail.com,9876543220,NextGen,Lost,Neha,2026-10-10

@@ -124,10 +124,10 @@
           <tr>
             <th class="bg-light ps-4 text-muted text-uppercase small">Schedule</th>
             <td class="ps-4">
-              {% if schedule_task %}
-              <code class="text-primary fs-6 font-monospace">
-                {{ schedule_task.crontab.minute }} {{ schedule_task.crontab.hour }} {{ schedule_task.crontab.day_of_month }} {{ schedule_task.crontab.month_of_year }} {{ schedule_task.crontab.day_of_week }}
-              </code>
+              {% if schedule_task and schedule_display != "--" %}
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill fw-semibold fs-6">
+                <i class="bi bi-clock me-1"></i>{{ schedule_display }}
+              </span>
               {% else %}
               <span class="text-muted">-- (Manual Only)</span>
               {% endif %}
@@ -290,10 +290,10 @@
             <span class="badge bg-secondary px-2 py-1">NOT SCHEDULED</span>
             {% endif %}
           </div>
-          {% if schedule_task %}
+          {% if schedule_task and schedule_display != "--" %}
           <div class="small">
-            <span class="text-muted">Cron Rule:</span>
-            <code class="text-primary font-monospace">{{ schedule_task.crontab.minute }} {{ schedule_task.crontab.hour }} {{ schedule_task.crontab.day_of_month }} {{ schedule_task.crontab.month_of_year }} {{ schedule_task.crontab.day_of_week }}</code>
+            <span class="text-muted">Selected Frequency:</span>
+            <strong class="text-primary ms-1">{{ schedule_display }}</strong>
           </div>
           {% if next_run_display and next_run_display != "--" %}
           <div class="small text-muted mt-1">
@@ -311,12 +311,18 @@
           <div class="input-group mb-3">
             <select name="frequency" class="form-select" required>
               <option value="" disabled {% if not schedule_task %}selected{% endif %}>-- Select Frequency Preset --</option>
-              <option value="every_1_min" {% if schedule_task and schedule_task.crontab.minute == "*" and schedule_task.crontab.hour == "*" %}selected{% endif %}>Every 1 Minute</option>
-              <option value="every_5_mins" {% if schedule_task and schedule_task.crontab.minute == "*/5" %}selected{% endif %}>Every 5 Minutes (*/5 * * * *)</option>
-              <option value="every_hour" {% if schedule_task and schedule_task.crontab.hour == "*" and schedule_task.crontab.minute == "0" %}selected{% endif %}>Every Hour (0 * * * *)</option>
-              <option value="daily_10am" {% if schedule_task and schedule_task.crontab.hour == "10" and schedule_task.crontab.minute == "0" %}selected{% endif %}>Every Day at 10:00 AM (0 10 * * *)</option>
-              <option value="daily_midnight" {% if schedule_task and schedule_task.crontab.hour == "0" and schedule_task.crontab.minute == "0" %}selected{% endif %}>Every Day at Midnight (0 0 * * *)</option>
-              <option value="weekly_monday">Weekly on Monday at 9:00 AM</option>
+              <!-- Preset: * * * * * -->
+              <option value="every_1_min" {% if schedule_display == "Every 1 Minute" %}selected{% endif %}>Every 1 Minute</option>
+              <!-- Preset: */5 * * * * -->
+              <option value="every_5_mins" {% if schedule_display == "Every 5 Minutes" %}selected{% endif %}>Every 5 Minutes</option>
+              <!-- Preset: 0 * * * * -->
+              <option value="every_hour" {% if schedule_display == "Every Hour" %}selected{% endif %}>Every Hour</option>
+              <!-- Preset: 0 10 * * * -->
+              <option value="daily_10am" {% if schedule_display == "Every Day at 10:00 AM" %}selected{% endif %}>Every Day at 10:00 AM</option>
+              <!-- Preset: 0 0 * * * -->
+              <option value="daily_midnight" {% if schedule_display == "Every Day at Midnight" %}selected{% endif %}>Every Day at Midnight</option>
+              <!-- Preset: 0 9 * * mon -->
+              <option value="weekly_monday" {% if schedule_display == "Weekly on Monday at 9:00 AM" %}selected{% endif %}>Weekly on Monday at 9:00 AM</option>
             </select>
             <button type="submit" class="btn btn-primary px-3">
               <i class="bi bi-check-lg me-1"></i> Save

@@ -138,12 +138,16 @@
               {% endif %}
             </td>
 
-            <!-- 3. Schedule -->
+            <!-- 3. Schedule: Displays friendly option name (stars documented in services.py) -->
             <td class="py-3">
-              {% if pipeline.schedule_task and pipeline.schedule_task.enabled and pipeline.status == "active" %}
-              <code class="text-primary font-monospace bg-primary-subtle px-2 py-1 rounded" style="font-size: 0.82rem;">
-                {{ pipeline.schedule_task.crontab.minute }} {{ pipeline.schedule_task.crontab.hour }} * * *
-              </code>
+              {% if pipeline.schedule_task and pipeline.schedule_task.enabled and pipeline.status == "active" and pipeline.schedule_display != "--" %}
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.82rem;">
+                <i class="bi bi-clock me-1"></i>{{ pipeline.schedule_display }}
+              </span>
+              {% elif pipeline.schedule_task and not pipeline.schedule_task.enabled and pipeline.schedule_display != "--" %}
+              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.82rem;" title="Schedule is paused">
+                <i class="bi bi-pause-circle me-1"></i>{{ pipeline.schedule_display }} (Paused)
+              </span>
               {% else %}
               <span class="text-muted fw-semibold">--</span>
               {% endif %}

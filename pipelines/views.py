@@ -21,6 +21,7 @@ from pipelines.services import (
     toggle_pipeline_schedule,
     delete_pipeline_cron,
     calculate_next_run,
+    format_schedule_display,
     format_next_run_display,
     format_last_run_display,
 )
@@ -129,6 +130,7 @@ def pipeline_list_page(request):
     for pipeline in pipelines:
         task_name = f"pipeline_cron_run_{pipeline.id}"
         pipeline.schedule_task = scheduled_tasks.get(task_name)
+        pipeline.schedule_display = format_schedule_display(pipeline.schedule_task)
         pipeline.next_run_at = calculate_next_run(pipeline.schedule_task)
         if pipeline.schedule_task and pipeline.schedule_task.enabled and pipeline.status == "active" and pipeline.next_run_at:
             pipeline.next_run_display = format_next_run_display(pipeline.next_run_at)
@@ -179,6 +181,7 @@ def pipeline_detail_page(request, pk):
 
     # 3. Fetch current cron schedule for this pipeline
     schedule_task = get_pipeline_schedule(pipeline.id)
+    schedule_display = format_schedule_display(schedule_task)
     next_run_at = calculate_next_run(schedule_task)
     next_run_display = format_next_run_display(next_run_at) if (schedule_task and schedule_task.enabled and pipeline.status == "active") else "--"
     
@@ -193,6 +196,7 @@ def pipeline_detail_page(request, pk):
             "last_execution": last_execution,
             "last_run_display": last_run_display,
             "schedule_task": schedule_task,
+            "schedule_display": schedule_display,
             "next_run_at": next_run_at,
             "next_run_display": next_run_display,
         },

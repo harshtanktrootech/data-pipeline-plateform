@@ -102,6 +102,44 @@ def format_next_run_display(next_run_at):
         return "--"
 
 
+def format_schedule_display(schedule_task):
+    """
+    Returns the simple dropdown option name for a pipeline schedule.
+    Cron star patterns are kept in comments for easy understanding.
+    """
+    if not schedule_task or not getattr(schedule_task, "crontab", None):
+        return "--"
+
+    minute = str(schedule_task.crontab.minute).strip()
+    hour = str(schedule_task.crontab.hour).strip()
+
+    # Option 1: Every 1 Minute (* * * * *)
+    if minute == "*" and hour == "*":
+        return "Every 1 Minute"
+
+    # Option 2: Every 5 Minutes (*/5 * * * *)
+    if minute == "*/5" and hour == "*":
+        return "Every 5 Minutes"
+
+    # Option 3: Every Hour (0 * * * *)
+    if minute == "0" and hour == "*":
+        return "Every Hour"
+
+    # Option 4: Every Day at 10:00 AM (0 10 * * *)
+    if minute == "0" and hour == "10":
+        return "Every Day at 10:00 AM"
+
+    # Option 5: Every Day at Midnight (0 0 * * *)
+    if minute == "0" and hour == "0":
+        return "Every Day at Midnight"
+
+    # Option 6: Weekly on Monday at 9:00 AM (0 9 * * mon)
+    if minute == "0" and hour == "9":
+        return "Weekly on Monday at 9:00 AM"
+
+    return "Custom Schedule"
+
+
 def format_last_run_display(last_execution):
     """
     Formats the last execution datetime into a clean string (e.g. '02:41 PM', 'Yesterday 03:15 PM', '15 Oct, 09:53 AM').

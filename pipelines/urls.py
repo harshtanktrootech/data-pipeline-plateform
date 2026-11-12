@@ -1,12 +1,10 @@
-from django.urls import path
-from pipelines.views import (
-    PipelineListCreateAPIView,
-    PipelineDetailAPIView,
-    PipelineRunAPIView,
-)
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from pipelines.views import PipelineViewSet
+
+router = DefaultRouter()
+router.register("", PipelineViewSet, basename="pipeline")
 
 urlpatterns = [
-    path("", PipelineListCreateAPIView.as_view(), name="pipeline-list-create"),
-    path("<int:pk>/", PipelineDetailAPIView.as_view(), name="pipeline-detail"),
-    path("<int:pk>/run/", PipelineRunAPIView.as_view(), name="api-pipeline-run"),
+    path("", include(router.urls)),
 ]

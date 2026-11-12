@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import connection
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.views import APIView
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_celery_beat.models import PeriodicTask
@@ -30,12 +30,22 @@ from audit.services import log_action
 
 # ── REST API Views ──
 
-class PipelineListCreateAPIView(ListCreateAPIView):
+class PipelineViewSet(viewsets.ModelViewSet):
+    """
+    REST API ViewSet for Pipeline CRUD and immediate execution:
+      - GET    /api/pipelines/          -> list
+      - POST   /api/pipelines/          -> create
+      - GET    /api/pipelines/<pk>/     -> retrieve
+      - PUT    /api/pipelines/<pk>/     -> update
+      - PATCH  /api/pipelines/<pk>/     -> partial_update
+      - DELETE /api/pipelines/<pk>/     -> destroy
+      - POST   /api/pipelines/<pk>/run/ -> run (execute pipeline immediately)
+    """
     queryset = Pipeline.objects.all()
     serializer_class = PipelineSerializer
 
     def get_permissions(self):
-        if self.request.method == "GET":
+        if self.action in ["list", "retrieve"]:
             return [IsAuthenticated()]
         return [CanManagePipeline()]
 
@@ -48,26 +58,13 @@ class PipelineListCreateAPIView(ListCreateAPIView):
             "Created via REST API",
         )
 
-
-class PipelineDetailAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = Pipeline.objects.all()
-    serializer_class = PipelineSerializer
-
-    def get_permissions(self):
-        if self.request.method == "GET":
-            return [IsAuthenticated()]
-        return [CanManagePipeline()]
-
-
-class PipelineRunAPIView(APIView):
-    """
-    POST /api/pipelines/<pk>/run/
-    Executes the ETL pipeline immediately via REST API (Admin and Operator only).
-    """
-    permission_classes = [CanManagePipeline]
-
-    def post(self, request, pk):
-        pipeline = get_object_or_404(Pipeline, pk=pk)
+    @action(detail=True, methods=["post"])
+    def run(self, request, pk=None):
+        """
+        POST /api/pipelines/<pk>/run/
+        Executes the ETL pipeline immediately via REST API (Admin and Operator only).
+        """
+        pipeline = self.get_object()
 
         if pipeline.status != "active":
             return Response(

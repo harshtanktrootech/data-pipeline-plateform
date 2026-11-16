@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
-from rest_framework import generics, status
+from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from accounts.permissions import IsAdmin
 from accounts.serializers import UserSerializer
@@ -244,10 +244,15 @@ def user_delete_view(request, user_id):
 
 # ── REST API Views ──
 
-class UserListCreateAPIView(generics.ListCreateAPIView):
+class UserViewSet(viewsets.ModelViewSet):
     """
-    GET /api/accounts/users/ -> List all users with RBAC roles (Admin only)
-    POST /api/accounts/users/ -> Create a new user with role (Admin only)
+    REST API ViewSet for User Management & RBAC (Admin only):
+      - GET    /api/accounts/users/      -> list
+      - POST   /api/accounts/users/      -> create
+      - GET    /api/accounts/users/<id>/ -> retrieve
+      - PUT    /api/accounts/users/<id>/ -> update
+      - PATCH  /api/accounts/users/<id>/ -> partial_update
+      - DELETE /api/accounts/users/<id>/ -> destroy
     """
     queryset = User.objects.all().prefetch_related("groups").order_by("-date_joined")
     serializer_class = UserSerializer
@@ -262,17 +267,6 @@ class UserListCreateAPIView(generics.ListCreateAPIView):
             resource=f"User #{user.id} ({user.username})",
             details=f"Created via REST API with role '{role}' by Admin '{self.request.user.username}'",
         )
-
-
-class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET /api/accounts/users/<id>/ -> Retrieve user details (Admin only)
-    PATCH/PUT /api/accounts/users/<id>/ -> Update user details / role (Admin only)
-    DELETE /api/accounts/users/<id>/ -> Delete user with safety checks (Admin only)
-    """
-    queryset = User.objects.all().prefetch_related("groups")
-    serializer_class = UserSerializer
-    permission_classes = [IsAdmin]
 
     def perform_update(self, serializer):
         target_user = self.get_object()

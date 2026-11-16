@@ -1,12 +1,13 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from accounts.views import (
-    UserListCreateAPIView,
-    UserDetailAPIView,
-)
+from accounts.views import UserViewSet
+
+router = DefaultRouter()
+router.register("users", UserViewSet, basename="user")
 
 urlpatterns = [
     # JWT Authentication
@@ -14,6 +15,5 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 
     # User Management & RBAC REST APIs (Admin Only)
-    path("users/", UserListCreateAPIView.as_view(), name="api-user-list-create"),
-    path("users/<int:pk>/", UserDetailAPIView.as_view(), name="api-user-detail"),
+    path("", include(router.urls)),
 ]

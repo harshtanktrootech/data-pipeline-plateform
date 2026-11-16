@@ -11,6 +11,68 @@ from accounts.serializers import UserSerializer
 from audit.services import log_action
 
 
+
+# ── REST API Views ──
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    REST API ViewSet for User Management & RBAC (Admin only):
+      - GET    /api/accounts/users/      -> list
+      - POST   /api/accounts/users/      -> create
+      - GET    /api/accounts/users/<id>/ -> retrieve
+      - PUT    /api/accounts/users/<id>/ -> update
+      - PATCH  /api/accounts/users/<id>/ -> partial_update
+      - DELETE /api/accounts/users/<id>/ -> destroy
+    """
+    queryset = User.objects.all().prefetch_related("groups").order_by("-date_joined")
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        role = serializer.data.get("role", "Viewer")
+        log_action(
+            user=self.request.user,
+            action="USER_CREATE",
+            resource=f"User #{user.id} ({user.username})",
+            details=f"Created via REST API with role '{role}' by Admin '{self.request.user.username}'",
+        )
+
+    def perform_update(self, serializer):
+        target_user = self.get_object()
+        new_role = self.request.data.get("role")
+        if target_user == self.request.user and new_role and new_role != "Admin":
+            raise ValidationError({"role": "Safety Warning: You cannot demote your own Admin account."})
+
+        user = serializer.save()
+        log_action(
+            user=self.request.user,
+            action="USER_ROLE_UPDATE",
+            resource=f"User #{user.id} ({user.username})",
+            details=f"Updated via REST API (Role: '{serializer.data.get('role')}') by Admin '{self.request.user.username}'",
+        )
+
+    def perform_destroy(self, instance):
+        if instance == self.request.user:
+            raise ValidationError({"detail": "Safety Warning: You cannot delete your own account."})
+
+        if instance.is_superuser and User.objects.filter(is_superuser=True).count() <= 1:
+            raise ValidationError({"detail": "Safety Warning: Cannot delete the only superuser account."})
+
+        username = instance.username
+        user_id_val = instance.id
+        instance.pipelines.update(created_by=self.request.user)
+        instance.delete()
+
+        log_action(
+            user=self.request.user,
+            action="USER_DELETE",
+            resource=f"User #{user_id_val} ({username})",
+            details=f"Deleted via REST API by Admin '{self.request.user.username}'",
+        )
+
+
+
 # ── HTML Authentication Views ──
 
 def register_view(request):
@@ -242,62 +304,4 @@ def user_delete_view(request, user_id):
     return redirect("user-management-page")
 
 
-# ── REST API Views ──
-
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    REST API ViewSet for User Management & RBAC (Admin only):
-      - GET    /api/accounts/users/      -> list
-      - POST   /api/accounts/users/      -> create
-      - GET    /api/accounts/users/<id>/ -> retrieve
-      - PUT    /api/accounts/users/<id>/ -> update
-      - PATCH  /api/accounts/users/<id>/ -> partial_update
-      - DELETE /api/accounts/users/<id>/ -> destroy
-    """
-    queryset = User.objects.all().prefetch_related("groups").order_by("-date_joined")
-    serializer_class = UserSerializer
-    permission_classes = [IsAdmin]
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        role = serializer.data.get("role", "Viewer")
-        log_action(
-            user=self.request.user,
-            action="USER_CREATE",
-            resource=f"User #{user.id} ({user.username})",
-            details=f"Created via REST API with role '{role}' by Admin '{self.request.user.username}'",
-        )
-
-    def perform_update(self, serializer):
-        target_user = self.get_object()
-        new_role = self.request.data.get("role")
-        if target_user == self.request.user and new_role and new_role != "Admin":
-            raise ValidationError({"role": "Safety Warning: You cannot demote your own Admin account."})
-
-        user = serializer.save()
-        log_action(
-            user=self.request.user,
-            action="USER_ROLE_UPDATE",
-            resource=f"User #{user.id} ({user.username})",
-            details=f"Updated via REST API (Role: '{serializer.data.get('role')}') by Admin '{self.request.user.username}'",
-        )
-
-    def perform_destroy(self, instance):
-        if instance == self.request.user:
-            raise ValidationError({"detail": "Safety Warning: You cannot delete your own account."})
-
-        if instance.is_superuser and User.objects.filter(is_superuser=True).count() <= 1:
-            raise ValidationError({"detail": "Safety Warning: Cannot delete the only superuser account."})
-
-        username = instance.username
-        user_id_val = instance.id
-        instance.pipelines.update(created_by=self.request.user)
-        instance.delete()
-
-        log_action(
-            user=self.request.user,
-            action="USER_DELETE",
-            resource=f"User #{user_id_val} ({username})",
-            details=f"Deleted via REST API by Admin '{self.request.user.username}'",
-        )
 

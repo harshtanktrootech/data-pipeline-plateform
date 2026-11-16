@@ -1,6 +1,10 @@
-from django.urls import path
-from executions.views import execution_history_page
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from executions.views import PipelineExecutionViewSet
+
+router = DefaultRouter()
+router.register("", PipelineExecutionViewSet, basename="execution")
 
 urlpatterns = [
-    path("", execution_history_page, name="execution-history-page"),
+    path("", include(router.urls)),
 ]

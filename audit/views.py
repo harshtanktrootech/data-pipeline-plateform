@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from rest_framework import generics
+from rest_framework import viewsets
 
 from accounts.permissions import IsAdmin
 from audit.models import AuditLog
@@ -15,14 +15,13 @@ from pipelines.models import Pipeline
 
 # ── REST API Views ──
 
-class AuditLogListAPIView(generics.ListAPIView):
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    GET /api/audit/
-    Lists system audit logs (Admin only).
-    Supports optional query filters:
-      - ?action=PIPELINE_RUN / USER_LOGIN / etc.
-      - ?user=<user_id>
+    REST API ViewSet for System Audit Logs (Admin only, Read-Only):
+      - GET /api/audit/      -> list (supports ?action= and ?user= filters)
+      - GET /api/audit/<id>/ -> retrieve
     """
+    queryset = AuditLog.objects.select_related("user").all()
     serializer_class = AuditLogSerializer
     permission_classes = [IsAdmin]
 
@@ -38,16 +37,6 @@ class AuditLogListAPIView(generics.ListAPIView):
             queryset = queryset.filter(user_id=int(user_param))
 
         return queryset
-
-
-class AuditLogDetailAPIView(generics.RetrieveAPIView):
-    """
-    GET /api/audit/<id>/
-    Retrieves a single audit log entry (Admin only).
-    """
-    queryset = AuditLog.objects.select_related("user").all()
-    serializer_class = AuditLogSerializer
-    permission_classes = [IsAdmin]
 
 
 # ── Frontend HTML Views ── 

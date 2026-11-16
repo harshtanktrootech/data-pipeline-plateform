@@ -1,10 +1,10 @@
-from django.urls import path
-from audit.views import (
-    AuditLogListAPIView,
-    AuditLogDetailAPIView,
-)
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from audit.views import AuditLogViewSet
+
+router = DefaultRouter()
+router.register("", AuditLogViewSet, basename="audit")
 
 urlpatterns = [
-    path("", AuditLogListAPIView.as_view(), name="api-audit-list"),
-    path("<int:pk>/", AuditLogDetailAPIView.as_view(), name="api-audit-detail"),
+    path("", include(router.urls)),
 ]

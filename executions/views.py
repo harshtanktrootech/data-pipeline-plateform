@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from rest_framework import generics
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from executions.models import PipelineExecution
@@ -11,12 +11,11 @@ from pipelines.models import Pipeline
 
 # ── REST API Views ──
 
-class PipelineExecutionListAPIView(generics.ListAPIView):
+class PipelineExecutionViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    GET /api/executions/
-    Lists pipeline executions with optional query filters:
-      - ?status=SUCCESS / FAILED / RUNNING
-      - ?pipeline=<pipeline_id>
+    REST API ViewSet for Pipeline Executions (Read-Only):
+      - GET /api/executions/      -> list (supports ?status= and ?pipeline= filters)
+      - GET /api/executions/<id>/ -> retrieve
     Accessible to all authenticated users (Admin, Operator, Viewer).
     """
     serializer_class = PipelineExecutionSerializer
@@ -24,26 +23,16 @@ class PipelineExecutionListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = PipelineExecution.objects.select_related("pipeline", "triggered_by").all()
-        
+
         status_param = self.request.query_params.get("status")
         if status_param:
             queryset = queryset.filter(status=status_param.strip().upper())
-            
+
         pipeline_param = self.request.query_params.get("pipeline")
         if pipeline_param and pipeline_param.isdigit():
             queryset = queryset.filter(pipeline_id=int(pipeline_param))
-            
+
         return queryset
-
-
-class PipelineExecutionDetailAPIView(generics.RetrieveAPIView):
-    """
-    GET /api/executions/<id>/
-    Retrieves full details of a specific execution run.
-    """
-    queryset = PipelineExecution.objects.select_related("pipeline", "triggered_by").all()
-    serializer_class = PipelineExecutionSerializer
-    permission_classes = [IsAuthenticated]
 
 
 # ── Frontend HTML Views ──

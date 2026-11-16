@@ -58,6 +58,24 @@ class PipelineViewSet(viewsets.ModelViewSet):
             "Created via REST API",
         )
 
+    def perform_update(self, serializer):
+        pipeline = serializer.save()
+        log_action(
+            self.request.user,
+            "PIPELINE_UPDATE",
+            f"Pipeline '{pipeline.name}' (#{pipeline.id})",
+            "Updated via REST API",
+        )
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        log_action(
+            self.request.user,
+            "PIPELINE_DELETE",
+            f"Pipeline '{instance.name}' (#{instance.id})",
+            "Deleted via REST API",
+        )
+
     @action(detail=True, methods=["post"])
     def run(self, request, pk=None):
         """

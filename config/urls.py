@@ -21,11 +21,7 @@ from pipelines.views import (
 )
 from audit.views import audit_log_list_page, audit_log_detail_page
 from dashboard.views import dashboard_view
-
-from executions.views import (
-    PipelineExecutionListAPIView,
-    PipelineExecutionDetailAPIView,
-)
+from executions.views import execution_history_page
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -43,8 +39,7 @@ urlpatterns = [
     # REST APIs
     path("api/accounts/", include("accounts.urls")),
     path("api/pipelines/", include("pipelines.urls")),
-    path("api/executions/", PipelineExecutionListAPIView.as_view(), name="api-execution-list"),
-    path("api/executions/<int:pk>/", PipelineExecutionDetailAPIView.as_view(), name="api-execution-detail"),
+    path("api/executions/", include("executions.urls")),
     path("api/audit/", include("audit.urls")),
     path("api/dashboard/", include("dashboard.urls")),
 
@@ -59,7 +54,7 @@ urlpatterns = [
     path("pipelines/<int:pk>/", pipeline_detail_page, name="pipeline-detail-page"),
     path("pipelines/<int:pk>/run/", run_pipeline_page_view, name="pipeline-run-page"),
     path("pipelines/<int:pk>/schedule/", schedule_pipeline_view, name="pipeline-schedule"),
-    path("executions/", include("executions.urls")),
+    path("executions/", execution_history_page, name="execution-history-page"),
     path("audit/", audit_log_list_page, name="audit-log-page"),
     path("audit/<int:pk>/", audit_log_detail_page, name="audit-log-detail-page"),
 ]

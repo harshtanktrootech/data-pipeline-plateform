@@ -1,76 +1,114 @@
 import pytest
 from django.contrib.auth.models import AnonymousUser
-from accounts.permissions import IsAdmin, IsOperator, IsViewer, CanManagePipeline
+from accounts.permissions import (
+    IsAdmin,
+    IsOperator,
+    IsViewer,
+    CanManagePipeline,
+    CanExecutePipeline,
+)
 from accounts.context_processors import user_roles
-from pipelines.models import Pipeline
 
 
-# ============================================================================
-# Concept 1: The 'rf' (RequestFactory) Fixture
-# ============================================================================
-# 'rf' is built into pytest-django. It creates a dummy HTTP request in memory
-# so you can test permissions and views without running a full HTTP server.
+# Reusable helper: creates a request with a user attached in 1 line
+
+@pytest.fixture
+def req(rf):
+    """Helper fixture: returns a request with user attached (defaults to AnonymousUser)."""
+    def _create(user=None):
+        request = rf.get("/")
+        request.user = user if user is not None else AnonymousUser()
+        return request
+    return _create
 
 
-def test_anonymous_user_denied_all_permissions(rf):
-    """
-    Ensure an unauthenticated (anonymous) visitor is denied by all permission classes.
-    """
-    request = rf.get("/api/pipelines/")
-    request.user = AnonymousUser()
 
-    assert IsAdmin().has_permission(request, view=None) is False
-    assert IsOperator().has_permission(request, view=None) is False
-    assert IsViewer().has_permission(request, view=None) is False
-    assert CanManagePipeline().has_permission(request, view=None) is False
+# 1. IsAdmin Permission (Admin / Superuser only)
+
+def test_is_admin_permission(req, admin_user, user):
+    perm = IsAdmin()
+
+    assert perm.has_permission(req(admin_user), None) is True
+    assert perm.has_permission(req(user), None) is False
+    assert perm.has_permission(req(), None) is False  # Anonymous
 
 
-# ============================================================================
-# Concept 2: Role-Based Permissions (Admin, Operator, Viewer)
-# ============================================================================
-def test_is_admin_permission(rf, admin_user, operator_user, user):
-    """
-    Test that IsAdmin allows superusers/admins and blocks everyone else.
-    """
-    request = rf.get("/")
-    permission = IsAdmin()
 
-    # Admin user -> Allowed
-    request.user = admin_user
-    assert permission.has_permission(request, view=None) is True
+# 2. IsOperator Permission (Operator group only)
 
-    # Operator user -> Denied
-    request.user = operator_user
-    assert permission.has_permission(request, view=None) is False
+def test_is_operator_permission(req, operator_user, admin_user, user):
+    perm = IsOperator()
 
-    # Standard user -> Denied
-    request.user = user
-    assert permission.has_permission(request, view=None) is False
+    assert perm.has_permission(req(operator_user), None) is True
+    assert perm.has_permission(req(admin_user), None) is False
+    assert perm.has_permission(req(user), None) is False
 
 
-def test_is_operator_permission(rf, operator_user, viewer_user):
-    """
-    Test that IsOperator allows only members of the Operator group.
-    """
-    request = rf.get("/")
-    permission = IsOperator()
 
-    request.user = operator_user
-    assert permission.has_permission(request, view=None) is True
+# 3. IsViewer Permission (Viewer group only)
 
-    request.user = viewer_user
-    assert permission.has_permission(request, view=None) is False
+def test_is_viewer_permission(req, viewer_user, operator_user, user):
+    perm = IsViewer()
+
+    assert perm.has_permission(req(viewer_user), None) is True
+    assert perm.has_permission(req(operator_user), None) is False
+    assert perm.has_permission(req(user), None) is False
 
 
-def test_is_viewer_permission(rf, viewer_user, user):
-    """
-    Test that IsViewer allows only members of the Viewer group.
-    """
-    request = rf.get("/")
-    permission = IsViewer()
 
-    request.user = viewer_user
-    assert permission.has_permission(request, view=None) is True
+# 4. CanManagePipeline (Admin can create/edit pipelines, Operators cannot)
 
-    request.user = user
-    assert permission.has_permission(request, view=None) is False
+def test_can_manage_pipeline_permission(req, admin_user, operator_user, sample_pipeline):
+    perm = CanManagePipeline()
+
+    # Admin is allowed
+    assert perm.has_permission(req(admin_user), None) is True
+    assert perm.has_object_permission(req(admin_user), None, sample_pipeline) is True
+
+    # Operator is blocked
+    assert perm.has_permission(req(operator_user), None) is False
+    assert perm.has_object_permission(req(operator_user), None, sample_pipeline) is False
+
+
+
+# 5. CanExecutePipeline (Both Admin and Operator can run pipelines)
+
+def test_can_execute_pipeline_permission(req, admin_user, operator_user, viewer_user, user):
+    perm = CanExecutePipeline()
+
+    # Allowed
+    assert perm.has_permission(req(admin_user), None) is True
+    assert perm.has_permission(req(operator_user), None) is True
+
+    # Denied
+    assert perm.has_permission(req(viewer_user), None) is False
+    assert perm.has_permission(req(user), None) is False
+
+
+
+# 6. Context Processor (Template Navbar Roles)
+
+def test_user_roles_context_processor(req, admin_user, operator_user, viewer_user):
+    # Guest
+    guest_context = user_roles(req())
+    assert guest_context["user_role"] == "Guest"
+    assert guest_context["is_admin"] is False
+    assert guest_context["is_operator"] is False
+
+    # Admin
+    admin_context = user_roles(req(admin_user))
+    assert admin_context["user_role"] == "Admin"
+    assert admin_context["is_admin"] is True
+    assert admin_context["is_operator"] is True
+
+    # Operator
+    operator_context = user_roles(req(operator_user))
+    assert operator_context["user_role"] == "Operator"
+    assert operator_context["is_admin"] is False
+    assert operator_context["is_operator"] is True
+
+    # Viewer
+    viewer_context = user_roles(req(viewer_user))
+    assert viewer_context["user_role"] == "Viewer"
+    assert viewer_context["is_admin"] is False
+    assert viewer_context["is_operator"] is False

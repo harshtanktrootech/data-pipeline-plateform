@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_celery_beat.models import PeriodicTask
 
-from accounts.permissions import CanManagePipeline
+from accounts.permissions import CanManagePipeline, CanExecutePipeline
 from pipelines.models import Pipeline
 from pipelines.serializers import PipelineSerializer
 from etl.runner import run_pipeline
@@ -47,6 +47,8 @@ class PipelineViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
             return [IsAuthenticated()]
+        if self.action == "run":
+            return [CanExecutePipeline()]
         return [CanManagePipeline()]
 
     def perform_create(self, serializer):

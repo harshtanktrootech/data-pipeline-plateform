@@ -31,11 +31,20 @@ class CanManagePipeline(BasePermission):
             request.user.is_authenticated
             and (
                 request.user.is_superuser
-                or request.user.groups.filter(name__in=["Admin", "Operator"]).exists()
+                or request.user.groups.filter(name="Admin").exists()
             )
         )
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser or request.user.groups.filter(name="Admin").exists():
-            return True
-        return obj.created_by == request.user
+        return self.has_permission(request, view)
+
+
+class CanExecutePipeline(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and (
+                request.user.is_superuser
+                or request.user.groups.filter(name__in=["Admin", "Operator"]).exists()
+            )
+        )

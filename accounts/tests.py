@@ -25,7 +25,7 @@ def req(rf):
 
 # 1. IsAdmin Permission (Admin / Superuser only)
 
-def test_is_admin_permission(req, admin_user, user):
+def test_is_admin(req, admin_user, user):
     perm = IsAdmin()
 
     assert perm.has_permission(req(admin_user), None) is True
@@ -36,7 +36,7 @@ def test_is_admin_permission(req, admin_user, user):
 
 # 2. IsOperator Permission (Operator group only)
 
-def test_is_operator_permission(req, operator_user, admin_user, user):
+def test_is_operator(req, operator_user, admin_user, user):
     perm = IsOperator()
 
     assert perm.has_permission(req(operator_user), None) is True
@@ -47,7 +47,7 @@ def test_is_operator_permission(req, operator_user, admin_user, user):
 
 # 3. IsViewer Permission (Viewer group only)
 
-def test_is_viewer_permission(req, viewer_user, operator_user, user):
+def test_is_viewer(req, viewer_user, operator_user, user):
     perm = IsViewer()
 
     assert perm.has_permission(req(viewer_user), None) is True
@@ -58,7 +58,7 @@ def test_is_viewer_permission(req, viewer_user, operator_user, user):
 
 # 4. CanManagePipeline (Admin can create/edit pipelines, Operators cannot)
 
-def test_can_manage_pipeline_permission(req, admin_user, operator_user, sample_pipeline):
+def test_can_manage_pipeline(req, admin_user, operator_user, sample_pipeline):
     perm = CanManagePipeline()
 
     # Admin is allowed
@@ -73,7 +73,7 @@ def test_can_manage_pipeline_permission(req, admin_user, operator_user, sample_p
 
 # 5. CanExecutePipeline (Both Admin and Operator can run pipelines)
 
-def test_can_execute_pipeline_permission(req, admin_user, operator_user, viewer_user, user):
+def test_can_execute_pipeline(req, admin_user, operator_user, viewer_user, user):
     perm = CanExecutePipeline()
 
     # Allowed
@@ -88,7 +88,7 @@ def test_can_execute_pipeline_permission(req, admin_user, operator_user, viewer_
 
 # 6. Context Processor (Template Navbar Roles)
 
-def test_user_roles_context_processor(req, admin_user, operator_user, viewer_user):
+def test_user_roles_context(req, admin_user, operator_user, viewer_user):
     # Guest
     guest_context = user_roles(req())
     assert guest_context["user_role"] == "Guest"

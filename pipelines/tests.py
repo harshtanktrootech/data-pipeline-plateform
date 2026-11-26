@@ -5,7 +5,7 @@ from pipelines.models import Pipeline
 
 # Concept 1: Using Fixtures from conftest.py in Model Tests
 
-def test_pipeline_creation_from_fixture(sample_pipeline, user):
+def test_pipeline_create(sample_pipeline, user):
     """
     Test using fixtures from conftest.py.
     Notice:
@@ -23,7 +23,7 @@ def test_pipeline_creation_from_fixture(sample_pipeline, user):
 # Concept 2: @pytest.mark.django_db (Granting Database Access)
 
 @pytest.mark.django_db
-def test_custom_table_name_is_not_overwritten(user):
+def test_custom_table_name(user):
     """
     Test that if a custom table_name is explicitly provided,
     Pipeline.save() preserves it instead of auto-generating one.
@@ -40,7 +40,7 @@ def test_custom_table_name_is_not_overwritten(user):
 # Concept 3: Database Constraints with pytest.raises
 
 @pytest.mark.django_db
-def test_duplicate_pipeline_name_raises_integrity_error(user):
+def test_duplicate_name_error(user):
     """
     Pipeline.name has unique=True.
     Test that creating two pipelines with identical names raises IntegrityError.
@@ -64,7 +64,7 @@ def test_duplicate_pipeline_name_raises_integrity_error(user):
         ("crm_leads_v2", "crm_leads_v2_data"),
     ],
 )
-def test_pipeline_auto_table_name_generation(user, raw_name, expected_table_name):
+def test_auto_table_name(user, raw_name, expected_table_name):
     """
     Parametrized test to verify table_name generation logic
     across various pipeline names.

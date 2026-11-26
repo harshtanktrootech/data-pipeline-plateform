@@ -7,7 +7,7 @@ from audit.models import AuditLog
 # 1. Authentication Check (Unauthenticated user is rejected)
 
 @pytest.mark.django_db
-def test_api_list_pipelines_requires_auth(api_client):
+def test_list_requires_auth(api_client):
     """Anonymous users cannot access the pipelines API."""
     url = reverse("pipeline-list")
     response = api_client.get(url)
@@ -17,7 +17,7 @@ def test_api_list_pipelines_requires_auth(api_client):
 
 # 2. List & Retrieve (Any authenticated user like Viewer can read)
 
-def test_api_list_pipelines_authenticated(api_client, viewer_user, sample_pipeline):
+def test_list_pipelines(api_client, viewer_user, sample_pipeline):
     """Logged-in users (even Viewers) can list pipelines."""
     api_client.force_authenticate(user=viewer_user)
 
@@ -31,7 +31,7 @@ def test_api_list_pipelines_authenticated(api_client, viewer_user, sample_pipeli
 
 # 3. Create Pipeline (Admin allowed, Operator blocked, Validation checked)
 
-def test_api_create_pipeline_admin_success(api_client, admin_user):
+def test_create_pipeline_admin(api_client, admin_user):
     """Admin can create a pipeline; DB record and AuditLog are created."""
     api_client.force_authenticate(user=admin_user)
     payload = {
@@ -48,7 +48,7 @@ def test_api_create_pipeline_admin_success(api_client, admin_user):
     assert AuditLog.objects.filter(action="PIPELINE_CREATE").exists()
 
 
-def test_api_create_pipeline_forbidden_for_operator(api_client, operator_user):
+def test_create_pipeline_forbidden(api_client, operator_user):
     """Operator cannot create pipelines (403 Forbidden)."""
     api_client.force_authenticate(user=operator_user)
 
@@ -58,7 +58,7 @@ def test_api_create_pipeline_forbidden_for_operator(api_client, operator_user):
     assert Pipeline.objects.count() == 0
 
 
-def test_api_create_pipeline_validation_error(api_client, admin_user):
+def test_create_pipeline_invalid_name(api_client, admin_user):
     """Serializer rejects pipeline names shorter than 3 characters (400 Bad Request)."""
     api_client.force_authenticate(user=admin_user)
 
@@ -70,7 +70,7 @@ def test_api_create_pipeline_validation_error(api_client, admin_user):
 
 # 4. Update & Delete Pipeline (Admin only)
 
-def test_api_update_and_delete_pipeline(api_client, admin_user, sample_pipeline):
+def test_update_and_delete_pipeline(api_client, admin_user, sample_pipeline):
     """Admin can update (PATCH) and delete (DELETE) a pipeline."""
     api_client.force_authenticate(user=admin_user)
     detail_url = reverse("pipeline-detail", args=[sample_pipeline.pk])
@@ -92,7 +92,7 @@ def test_api_update_and_delete_pipeline(api_client, admin_user, sample_pipeline)
 
 # 5. Custom Action Guard: Cannot run an inactive pipeline
 
-def test_api_run_inactive_pipeline_returns_400(api_client, operator_user, sample_pipeline):
+def test_run_inactive_pipeline(api_client, operator_user, sample_pipeline):
     """Operator has run permission, but inactive pipelines must return 400."""
     sample_pipeline.status = "inactive"
     sample_pipeline.save()
@@ -110,7 +110,7 @@ def test_api_run_inactive_pipeline_returns_400(api_client, operator_user, sample
 # 6. HTML Frontend View Tests (Using Django's 'client' fixture)
 
 @pytest.mark.django_db
-def test_pipeline_list_page_redirects_anonymous_user(client):
+def test_page_redirects_guest(client):
     """Unauthenticated browser request redirects to login page (302)."""
     response = client.get(reverse("pipeline-list-page"))
 
@@ -118,7 +118,7 @@ def test_pipeline_list_page_redirects_anonymous_user(client):
     assert "/login/" in response.url
 
 
-def test_pipeline_list_page_renders_for_logged_in_user(client, user, sample_pipeline):
+def test_page_renders_user(client, user, sample_pipeline):
     """Authenticated browser request renders the HTML page (200)."""
     client.force_login(user)
 

@@ -25,7 +25,7 @@ def test_clean_column_name(raw_input, expected_output):
 
 
 # Concept 2: with pytest.raises (Testing that exceptions are raised)
-def test_transform_data_none_raises_error():
+def test_transform_none_error():
     """
     Verify that passing None as the dataframe raises a ValueError.
     """
@@ -38,7 +38,7 @@ def test_transform_data_none_raises_error():
 
 
 # Concept 3: Standard assertions & testing data structures
-def test_transform_data_empty_dataframe():
+def test_transform_empty_df():
     """
     Verify that an empty DataFrame returns empty lists for both records and errors.
     """
@@ -49,7 +49,7 @@ def test_transform_data_empty_dataframe():
     assert failed_rows == []
 
 
-def test_transform_data_cleans_values_and_handles_nulls():
+def test_transform_cleans_rows():
     """
     Test that transform_data:
       1. Cleans column headers (e.g., ' Full Name ' -> 'full_name')

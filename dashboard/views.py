@@ -16,7 +16,8 @@ def get_dashboard_stats():
 
     exec_stats = PipelineExecution.objects.aggregate(
         successful_executions=Count("id", filter=Q(status="SUCCESS")),
-        failed_executions=Count("id", filter=Q(status__in=["FAILED", "PARTIALLY_FAILED"])),
+        failed_executions=Count("id", filter=Q(status="FAILED")),
+        partially_failed_executions=Count("id", filter=Q(status="PARTIALLY_FAILED")),
         running_executions=Count("id", filter=Q(status="RUNNING")),
         avg_execution_time=Avg("duration_seconds"),
     )
@@ -40,6 +41,7 @@ def get_dashboard_stats():
         "total_pipelines": total_pipelines,
         "successful_executions": exec_stats["successful_executions"] or 0,
         "failed_executions": exec_stats["failed_executions"] or 0,
+        "partially_failed_executions": exec_stats["partially_failed_executions"] or 0,
         "running_executions": exec_stats["running_executions"] or 0,
         "avg_execution_time": round(exec_stats["avg_execution_time"] or 0.0, 2),
         "active_pipelines": active_pipelines,

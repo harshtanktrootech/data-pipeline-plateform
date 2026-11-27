@@ -10,6 +10,7 @@ class DashboardStatsSerializer(serializers.Serializer):
     total_pipelines = serializers.IntegerField()
     successful_executions = serializers.IntegerField()
     failed_executions = serializers.IntegerField()
+    partially_failed_executions = serializers.IntegerField()
     running_executions = serializers.IntegerField()
     avg_execution_time = serializers.FloatField()
     active_pipelines = serializers.IntegerField()

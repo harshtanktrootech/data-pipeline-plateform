@@ -76,7 +76,24 @@
         </div>
     </div>
 
-    <!-- 4. Running Pipelines -->
+    <!-- 4. Partially Failed Executions -->
+    <div class="col-sm-6 col-lg-4 col-xl">
+        <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted text-uppercase fw-semibold small">Partial Runs</div>
+                        <h3 class="fw-bold my-1 text-warning-emphasis">{{ partially_failed_executions }}</h3>
+                    </div>
+                    <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-circle">
+                        <i class="bi bi-exclamation-triangle fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Running Pipelines -->
     <div class="col-sm-6 col-lg-4 col-xl">
         <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-warning">
             <div class="card-body">
@@ -93,7 +110,7 @@
         </div>
     </div>
 
-    <!-- 5. Average Execution Time -->
+    <!-- 6. Average Execution Time -->
     <div class="col-sm-6 col-lg-4 col-xl">
         <div class="card shadow-sm border-0 rounded-3 h-100 border-start border-4 border-info">
             <div class="card-body">

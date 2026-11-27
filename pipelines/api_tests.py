@@ -118,9 +118,9 @@ def test_page_redirects_guest(client):
     assert "/login/" in response.url
 
 
-def test_page_renders_user(client, user, sample_pipeline):
-    """Authenticated browser request renders the HTML page (200)."""
-    client.force_login(user)
+def test_page_renders_viewer(client, viewer_user, sample_pipeline):
+    """Authenticated browser request (e.g. Viewer) renders the HTML page (200)."""
+    client.force_login(viewer_user)
 
     response = client.get(reverse("pipeline-list-page"))
 

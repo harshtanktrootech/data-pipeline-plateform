@@ -57,12 +57,12 @@ def viewer_user(db):
 
 
 @pytest.fixture
-def sample_pipeline(db, user):
-    """A sample active pipeline owned by the standard user."""
+def sample_pipeline(db, admin_user):
+    """A sample active pipeline created by an Admin."""
     return Pipeline.objects.create(
         name="Sales Analytics Pipeline",
         description="Daily sales ingestion pipeline",
         source="data/sales.csv",
         status="active",
-        created_by=user,
+        created_by=admin_user,
     )

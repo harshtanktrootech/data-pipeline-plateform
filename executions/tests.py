@@ -39,7 +39,7 @@ def test_task_runs_pipeline(sample_pipeline, operator_user):
 
 # 3. ETL Runner: Mocking with Pytest's built-in 'monkeypatch' fixture
 
-def test_run_pipeline_success(monkeypatch, sample_pipeline, user):
+def test_run_pipeline_success(monkeypatch, sample_pipeline, operator_user):
     """
     Replace extract_data, transform_data, and load_data with lightweight fake functions
     using monkeypatch, then verify PipelineExecution and AuditLog are saved.
@@ -57,7 +57,7 @@ def test_run_pipeline_success(monkeypatch, sample_pipeline, user):
         },
     )
 
-    result = run_pipeline(sample_pipeline, triggered_by=user)
+    result = run_pipeline(sample_pipeline, triggered_by=operator_user)
 
     assert result["status"] == "SUCCESS"
     assert result["records_added"] == 2
@@ -68,7 +68,7 @@ def test_run_pipeline_success(monkeypatch, sample_pipeline, user):
 
 # 4. ETL Runner: PARTIALLY_FAILED outcome
 
-def test_run_pipeline_partial_fail(monkeypatch, sample_pipeline, user):
+def test_run_pipeline_partial_fail(monkeypatch, sample_pipeline, operator_user):
     """If some rows fail and some succeed, status becomes PARTIALLY_FAILED."""
     extract_errors = [{"row_number": 3, "data": {}, "error": "Wrong column count"}]
 
@@ -83,7 +83,7 @@ def test_run_pipeline_partial_fail(monkeypatch, sample_pipeline, user):
         },
     )
 
-    result = run_pipeline(sample_pipeline, triggered_by=user)
+    result = run_pipeline(sample_pipeline, triggered_by=operator_user)
 
     assert result["status"] == "PARTIALLY_FAILED"
     assert result["records_added"] == 1
